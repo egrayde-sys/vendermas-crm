@@ -603,7 +603,7 @@ def get_googleads():
         if not activos: return jsonify([])
         ads_client = get_ads_client()
         ga_service = ads_client.get_service('GoogleAdsService')
-        hoy30=date.today(); ini30=hoy30-timedelta(days=1)
+        hoy30=date.today()-timedelta(days=1); ini30=hoy30-timedelta(days=30)
         result = []
         for c in activos:
             gads_id = c.get('ID Google Ads','').strip().replace('-','')
@@ -870,16 +870,6 @@ def run_scheduler():
 # Iniciar scheduler en background
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
-
-@app.route('/api/test-slack/<tipo>')
-def test_slack(tipo):
-    if tipo == 'resumen': resumen_lunes()
-    elif tipo == 'metas': metas_lunes()
-    elif tipo == 'leads': leads_lunes()
-    elif tipo == 'contactos': contactos_hoy()
-    elif tipo == 'vencimientos': vencimientos_renovaciones()
-    elif tipo == 'ads': alerta_google_ads()
-    return jsonify({'ok': True, 'tipo': tipo})
 
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
