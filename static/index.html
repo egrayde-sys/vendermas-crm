@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Vendermas — Dashboard General</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f0ee;min-height:100vh;color:#1a1a1a;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:#042C53;display:flex;flex-direction:column;z-index:100;overflow-y:auto;}
+.logo{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.1);}
+.logo .marca{font-size:16px;font-weight:700;color:white;}
+.logo .sub{font-size:10px;color:#85B7EB;margin-top:2px;}
+.nav-section{padding:12px 8px 4px;}
+.nav-label{font-size:9px;color:#85B7EB;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;padding:0 8px 6px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:white;}
+.nav-item.active{background:#185FA5;color:white;font-weight:500;}
+.nav-badge{margin-left:auto;background:#E24B4A;color:white;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;}
+.main{margin-left:220px;min-height:100vh;}
+.page{display:none;padding:24px;}
+.page.active{display:block;}
+.page-titulo{font-size:20px;font-weight:600;margin-bottom:4px;}
+.page-sub{font-size:12px;color:#888;margin-bottom:20px;}
+.kpi-grid{display:grid;gap:10px;margin-bottom:20px;}
+.kpi{background:white;border-radius:12px;padding:16px;border:1px solid #ececec;}
+.kpi-label{font-size:10px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;}
+.kpi-valor{font-size:24px;font-weight:700;line-height:1;}
+.kpi-sub{font-size:11px;margin-top:4px;}
+.ok{color:#3B6D11;}.warn{color:#D85A00;}.danger{color:#A32D2D;}.info{color:#185FA5;}
+.card{background:white;border-radius:12px;border:1px solid #ececec;overflow:hidden;margin-bottom:16px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #f0f0f0;flex-wrap:wrap;gap:8px;}
+.card-titulo{font-size:13px;font-weight:600;}
+.card-acciones{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.btn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;}
+.btn-primary{background:#185FA5;color:white;}
+.btn-primary:hover{background:#0C447C;}
+.btn-outline{background:white;color:#555;border:1px solid #e0e0e0;}
+.btn-outline:hover{background:#f5f5f5;}
+.btn-danger{background:#FCEBEB;color:#A32D2D;border:1px solid #F5C8C8;}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:6px;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.4px;padding:10px 14px;text-align:left;border-bottom:1px solid #f0f0f0;background:#fafafa;white-space:nowrap;}
+td{padding:10px 14px;border-bottom:1px solid #f8f8f8;font-size:12px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafffe;}
+.tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px;display:inline-block;white-space:nowrap;}
+.tag-blue{background:#E6F1FB;color:#0C447C;}
+.tag-verde{background:#EAF3DE;color:#3B6D11;}
+.tag-amarillo{background:#FFF8DC;color:#856600;}
+.tag-rojo{background:#FCEBEB;color:#A32D2D;}
+.tag-gris{background:#f0f0f0;color:#666;}
+.tag-morado{background:#EDE7F6;color:#4527A0;}
+.tag-naranja{background:#FFF0E6;color:#C45000;}
+.inp{border:1px solid #e0e0e0;border-radius:7px;padding:7px 12px;font-size:12px;outline:none;background:white;width:100%;}
+.inp:focus{border-color:#185FA5;}
+.inp.err-field{border-color:#E24B4A;}
+.sel{border:1px solid #e0e0e0;border-radius:7px;padding:6px 10px;font-size:11px;outline:none;background:white;cursor:pointer;}
+.sel:focus{border-color:#185FA5;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:white;border-radius:14px;width:600px;max-height:90vh;overflow-y:auto;padding:24px;}
+.modal-sm{width:420px;}
+.modal-titulo{font-size:16px;font-weight:600;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg.full{grid-column:span 2;}
+.fg label{font-size:11px;font-weight:500;color:#555;}
+.fg label .req{color:#E24B4A;}
+.fg input,.fg select,.fg textarea{border:1px solid #e0e0e0;border-radius:7px;padding:8px 10px;font-size:12px;outline:none;font-family:inherit;width:100%;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#185FA5;}
+.fg input.err-field,.fg select.err-field{border-color:#E24B4A !important;}
+.fg textarea{resize:vertical;min-height:60px;}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid #f0f0f0;}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:#185FA5;cursor:pointer;margin-bottom:16px;background:none;border:none;padding:0;}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.det-card{background:white;border-radius:12px;border:1px solid #ececec;padding:16px;}
+.det-titulo{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.det-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #f8f8f8;}
+.det-row:last-child{border-bottom:none;}
+.det-k{color:#888;}.det-v{font-weight:500;text-align:right;}
+.hist-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px;flex-wrap:wrap;}
+.hist-item:last-child{border-bottom:none;}
+.prg-wrap{display:flex;align-items:center;gap:8px;}
+.prg-bg{flex:1;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;}
+.prg-fill{height:100%;border-radius:3px;}
+.cal-wrap{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:16px;}
+.cal-sem{background:white;border-radius:10px;border:1px solid #ececec;padding:12px;text-align:center;}
+.cal-sem.urgente{border-color:#F44336;background:#fff8f8;}
+.cal-sem.proximo{border-color:#FFC107;background:#fffdf0;}
+.cal-lbl{font-size:9px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px;}
+.cal-rng{font-size:9px;color:#888;margin-bottom:6px;}
+.cal-num{font-size:26px;font-weight:700;line-height:1;}
+.cal-sub{font-size:10px;margin-top:3px;}
+.meta-mes-card{background:white;border-radius:12px;border:2px solid #185FA5;padding:18px;margin-bottom:16px;}
+.meta-mes-titulo{font-size:13px;font-weight:600;color:#185FA5;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.progreso-item{margin-bottom:14px;}
+.progreso-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
+.progreso-bg{height:10px;background:#f0f0f0;border-radius:5px;overflow:hidden;}
+.progreso-fill{height:100%;border-radius:5px;}
+.progreso-sub{font-size:10px;color:#aaa;margin-top:3px;}
+.meta-hist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.meta-hist-card{background:white;border-radius:10px;border:1px solid #ececec;padding:14px;}
+.meta-hist-titulo{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:10px;}
+.mh-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.mh-label{font-size:11px;color:#666;width:70px;flex-shrink:0;}
+.mh-bars{flex:1;}
+.mh-bar-bg{height:7px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin-bottom:2px;}
+.mh-bar-fill{height:100%;border-radius:3px;}
+.mh-nums{display:flex;justify-content:space-between;font-size:10px;color:#aaa;}
+.mh-pct{font-size:12px;font-weight:700;width:36px;text-align:right;}
+.cfg-section{background:white;border-radius:12px;border:1px solid #ececec;padding:20px;margin-bottom:14px;}
+.cfg-titulo{font-size:13px;font-weight:600;margin-bottom:12px;}
+.cfg-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.cfg-tag{display:flex;align-items:center;gap:6px;background:#f5f5f5;border-radius:7px;padding:5px 10px;font-size:12px;}
+.cfg-tag button{background:none;border:none;cursor:pointer;color:#bbb;font-size:14px;line-height:1;}
+.cfg-tag button:hover{color:#E24B4A;}
+.cfg-add{display:flex;gap:8px;}
+.cfg-add input{border:1px solid #e0e0e0;border-radius:7px;padding:7px 10px;font-size:12px;outline:none;flex:1;}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid #e0e0e0;border-top-color:#185FA5;border-radius:50%;animation:spin 0.7s linear infinite;}
+.login-page{position:fixed;inset:0;background:#f0f0ee;display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-box{background:white;border-radius:16px;padding:40px;width:360px;border:1px solid #ececec;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+.login-logo{font-size:24px;font-weight:700;color:#042C53;margin-bottom:4px;}
+.login-sub{font-size:13px;color:#888;margin-bottom:28px;}
+.login-err{color:#A32D2D;font-size:12px;margin-top:8px;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:#888;font-size:13px;}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a1a;color:white;padding:12px 20px;border-radius:10px;font-size:13px;z-index:999;display:none;align-items:center;gap:8px;}
+.toast.show{display:flex;}
+.toast.success{background:#3B6D11;}
+.toast.error{background:#A32D2D;}
+.comentario-item{padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:12px;}
+.comentario-item:last-child{border-bottom:none;}
+.comentario-fecha{font-size:10px;color:#aaa;margin-bottom:2px;}
+.comentario-texto{color:#333;}
+.stats-mes-wrap{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.stats-mes-item{background:#EAF3DE;border-radius:8px;padding:8px 14px;text-align:center;}
+.stats-mes-num{font-size:18px;font-weight:700;color:#3B6D11;}
+.stats-mes-lbl{font-size:10px;color:#3B6D11;margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="login-page" id="login-page">
+  <div class="login-box">
+    <div class="login-logo">Vendermas</div>
+    <div class="login-sub">Dashboard General — Ingresa tus credenciales</div>
+    <div class="fg" style="margin-bottom:14px">
+      <label style="font-size:11px;font-weight:500;color:#555">Usuario</label>
+      <input class="inp" id="login-user" type="text" placeholder="Usuario" onkeydown="if(event.key==='Enter')hacerLogin()">
+    </div>
+    <div class="fg" style="margin-bottom:20px">
+      <label style="font-size:11px;font-weight:500;color:#555">Contraseña</label>
+      <input class="inp" id="login-pass" type="password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')hacerLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="hacerLogin()" id="btn-login">Ingresar</button>
+    <div class="login-err" id="login-err">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="logo"><div class="marca">Vendermas</div><div class="sub">Dashboard General</div></div>
+  <div class="nav-section">
+    <div class="nav-label">Dashboard</div>
+    <div class="nav-item" onclick="nav('indicadores',this)">📊 Indicadores</div>
+    <div class="nav-item" onclick="nav('ventas',this)">💰 Ventas</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Metas</div>
+    <div class="nav-item" onclick="nav('metas',this)">🏆 Metas</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Leads</div>
+    <div class="nav-item" onclick="nav('leads',this)">🎯 Leads <span class="nav-badge" id="badge-leads">0</span></div>
+    <div class="nav-item" onclick="nav('calendario',this)">📅 Calendario leads</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Clientes</div>
+    <div class="nav-item" onclick="nav('clientes',this)">👥 Clientes</div>
+    <div class="nav-item" onclick="nav('cal-renovaciones',this)">📅 Cal. Renovaciones</div>
+    <div class="nav-item" onclick="nav('googleads',this)">📈 Google Ads</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Configuración</div>
+    <div class="nav-item" onclick="nav('config',this)">⚙️ Configuración</div>
+    <div class="nav-item" onclick="cerrarSesion()" style="color:#E24B4A">🚪 Cerrar sesión</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- RESUMEN -->
+<div class="page" id="page-resumen">
+  <div class="page-titulo">Resumen general</div>
+  <div class="page-sub" id="fecha-hoy"></div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)" id="kpi-resumen">
+    <div class="loading" style="grid-column:span 5"><div class="spinner"></div> Cargando...</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Todos los clientes</div>
+      <div class="card-acciones">
+        <select class="sel" id="fil-res-plan" onchange="renderResumen()"><option value="">Todos los planes</option></select>
+        <select class="sel" onchange="filRes.renovacion=this.value;renderResumen()">
+          <option value="">Todo estado renov.</option>
+          <option value="urgente">Urgente</option><option value="proximo">Próximo</option><option value="ok">OK</option>
+        </select>
+        <input class="inp" style="width:160px" placeholder="Buscar..." oninput="filRes.q=this.value;renderResumen()">
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Cliente</th><th>Plan</th><th>Monto plan</th><th>Rentabilidad</th><th>Vencimiento</th><th>Estado renov.</th><th></th></tr></thead>
+      <tbody id="tbody-resumen"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CLIENTES -->
+<div class="page active" id="page-clientes">
+  <div id="cli-lista">
+    <div class="page-titulo">Clientes</div>
+    <div class="page-sub">Gestión completa de clientes</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px" id="kpi-clientes"></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-titulo">Listado</div>
+        <div class="card-acciones">
+          <select class="sel" id="fil-cli-plan" onchange="renderClientes()"><option value="">Todos los planes</option></select>
+          <select class="sel" id="fil-cli-pago" onchange="renderClientes()"><option value="">Tipo de pago</option><option value="factura">Factura</option><option value="negro">Sin factura</option></select>
+          <select class="sel" id="fil-cli-estado" onchange="renderClientes()"><option value="">Todo estado</option></select>
+          <input class="inp" style="width:150px" placeholder="Buscar..." oninput="filCli.q=this.value;renderClientes()">
+          <button class="btn btn-primary" onclick="abrirModalCliente(false)">+ Nuevo cliente</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Cliente</th><th>Plan</th><th>Monto</th><th>Rentabilidad</th><th>Inicio</th><th>Vencimiento</th><th>Tipo pago</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="tbody-clientes"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="cli-detalle" style="display:none"></div>
+</div>
+
+<!-- LEADS -->
+<div class="page" id="page-leads">
+  <div class="page-titulo">Seguimiento de leads</div>
+  <div class="page-sub">Pipeline de nuevos clientes potenciales</div>
+  <div id="stats-leads"></div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(8,1fr)" id="kpi-leads"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Pipeline</div>
+      <div class="card-acciones">
+        <select class="sel" id="fil-leads-fuente" onchange="filLeads.fuente=this.value;renderLeads()"><option value="">Toda fuente</option></select>
+        <select class="sel" onchange="filLeads.etapa=this.value;renderLeads()">
+          <option value="">Toda etapa</option>
+          <option value="nuevo">Nuevo</option><option value="contactado">Contactado</option>
+          <option value="negociacion">Negociación</option><option value="cerrado">Vendido</option><option value="perdido">Perdido</option>
+        </select>
+        <select class="sel" id="fil-leads-mes" onchange="filLeads.mes=this.value;renderLeads()"><option value="">Todos los meses</option></select>
+        <input class="inp" style="width:130px" placeholder="Buscar..." oninput="filLeads.q=this.value;renderLeads()">
+        <button class="btn btn-primary" onclick="abrirModalLead(false)">+ Nuevo lead</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Empresa</th><th>Contacto</th><th>Plan interés</th><th>Fuente</th><th>Fecha</th><th>Etapa</th><th>Último comentario</th><th></th></tr></thead>
+      <tbody id="tbody-leads"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- INDICADORES -->
+<div class="page" id="page-indicadores">
+  <div class="page-titulo">Indicadores</div>
+  <div class="page-sub">Resumen ejecutivo del negocio</div>
+
+<!-- METAS MES ACTUAL -->
+  <div style="font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #185FA5;cursor:pointer" onclick="nav('metas',document.querySelectorAll('.nav-item')[4])">🏆 Metas — <span style="font-size:12px;color:#185FA5">mes actual →</span></div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px" id="ind-metas"></div>
+
+  <!-- LEADS -->
+    <div style="font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #185FA5;cursor:pointer" onclick="nav('leads',document.querySelectorAll('.nav-item')[2])">🎯 Leads →</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(8,1fr);margin-bottom:8px" id="ind-leads-mes"></div>
+  <div id="fil-ind-mes" style="display:none"></div>
+  <div id="tbody-ind-leads" style="display:none"></div>
+
+  <!-- CLIENTES ACTIVOS -->
+  <div style="font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #185FA5;cursor:pointer" onclick="nav('clientes',document.querySelectorAll('.nav-item')[1])">👥 Clientes activos →</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:12px" id="ind-cli-kpis"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+    <div class="card">
+      <div class="card-header"><div class="card-titulo">Por tipo de pago</div></div>
+      <table>
+        <thead><tr><th>Tipo</th><th>Clientes</th><th>Monto mensual</th></tr></thead>
+        <tbody id="tbody-ind-pago"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-titulo">Por plan</div></div>
+      <table>
+        <thead><tr><th>Plan</th><th>Clientes</th><th>Monto mensual</th></tr></thead>
+        <tbody id="tbody-ind-plan"></tbody>
+      </table>
+    </div>
+  </div>
+    
+
+  
+    <!-- PERDIDOS POR MES -->
+  <div style="font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #185FA5;cursor:pointer" onclick="nav('clientes',document.querySelectorAll('.nav-item')[1])">📉 Clientes perdidos por mes →</div>
+  <div class="card" style="margin-bottom:20px">
+    <table>
+      <thead><tr><th>Mes</th><th>Clientes perdidos</th></tr></thead>
+      <tbody id="tbody-ind-perdidos"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- RENOVACIONES -->
+<div class="page" id="page-renovaciones">
+  <div class="page-titulo">Renovaciones</div>
+  <div class="page-sub">Control de vencimientos — próximos 60 días</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)" id="kpi-ren"></div>
+  <div class="card" style="padding:16px">
+    <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:12px">Vista semanal — próximos 60 días</div>
+    <div class="cal-wrap" style="grid-template-columns:repeat(9,1fr)" id="cal-ren"></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Detalle por cliente</div>
+      <div class="card-acciones">
+        <select class="sel" id="fil-ren-plan" onchange="renderRenovaciones()"><option value="">Todos los planes</option></select>
+        <select class="sel" onchange="filRen.sort=this.value;renderRenovaciones()">
+          <option value="dias">Ordenar: Días</option><option value="plan">Ordenar: Plan</option><option value="vence">Ordenar: Día vence</option>
+        </select>
+        <input class="inp" style="width:140px" placeholder="Buscar..." oninput="filRen.q=this.value;renderRenovaciones()">
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Cliente</th><th>Plan</th><th>Día vence</th><th>Días</th><th>Estado mes</th><th>Monto</th><th>Utilidad</th><th>Contacto</th><th></th></tr></thead>
+      <tbody id="tbody-ren"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- METAS -->
+<div class="page" id="page-metas">
+  <div class="page-titulo">Metas</div>
+  <div class="page-sub">Seguimiento de objetivos mensuales</div>
+  <div class="meta-mes-card">
+    <div class="meta-mes-titulo">
+      <span id="meta-mes-titulo">Mes actual</span>
+      <button class="btn btn-outline btn-sm" onclick="abrirModalMetaNueva()">+ Nueva meta</button>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalReal()">✏️ Actualizar real</button>
+    </div>
+    <div id="meta-mes-content"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+  </div>
+  <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:#555">Histórico</div>
+  <div class="meta-hist-grid" id="meta-historico"></div>
+</div>
+
+<!-- RENOVACIONES -->
+<div class="page" id="page-renovaciones">
+  <div class="page-titulo">Renovaciones</div>
+  <div class="page-sub">Control de cobros pendientes</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)" id="kpi-ren"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Cobros pendientes</div>
+      <div class="card-acciones">
+        <select class="sel" onchange="filRen.estado=this.value;renderRenovaciones()">
+          <option value="">Todo estado</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="postergado">Postergado</option>
+          <option value="atrasado">Atrasado</option>
+          <option value="renovado">Pagado</option>
+        </select>
+        <select class="sel" onchange="filRen.frecuencia=this.value;renderRenovaciones()">
+          <option value="">Toda frecuencia</option>
+          <option value="mensual">Mensual</option>
+          <option value="semanal">Semanal</option>
+        </select>
+        <input class="inp" style="width:150px" placeholder="Buscar..." oninput="filRen.q=this.value;renderRenovaciones()">
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Cliente</th><th>Plan</th><th>Frecuencia</th><th>Vence</th><th>Días</th><th>Estado</th><th>Monto</th><th>Acciones</th></tr></thead>
+      <tbody id="tbody-ren"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CALENDARIO -->
+<div class="page" id="page-calendario">
+  <div class="page-titulo">Calendario de contactos</div>
+  <div class="page-sub">Próximos contactos de leads — drag and drop para reprogramar</div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+    <button class="btn btn-outline" onclick="cambiarSemana(-1)">← Mes anterior</button>
+    <div style="font-weight:600;font-size:14px;min-width:200px;text-align:center" id="cal-semana-titulo"></div>
+    <button class="btn btn-outline" onclick="cambiarSemana(1)">Mes siguiente →</button>
+    <button class="btn btn-outline" onclick="irHoy()">Hoy</button>
+  </div>
+  <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px"></div>
+</div>
+
+<!-- VENTAS -->
+<div class="page" id="page-ventas">
+  <div class="page-titulo">Ventas por mes</div>
+  <div class="page-sub">Renovaciones pagadas — resumen mensual</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-bottom:16px" id="kpi-ventas"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Resumen mensual</div>
+      <div class="card-acciones">
+        <select class="sel" id="fil-ventas-mes" onchange="renderVentas()"><option value="">Todos los meses</option></select>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Mes</th><th>Renovaciones</th><th>Monto total</th><th>Comisión total</th><th>Inv. Ads</th><th>Con factura</th><th>Sin factura</th></tr></thead>
+      <tbody id="tbody-ventas"></tbody>
+    </table>
+  </div>
+  <div class="card" id="card-ventas-detalle" style="display:none">
+    <div class="card-header">
+      <div class="card-titulo" id="ventas-det-titulo">Detalle del mes</div>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('card-ventas-detalle').style.display='none'">← Volver</button>
+    </div>
+    <table>
+      <thead><tr><th>Cliente</th><th>Plan</th><th>Tipo pago</th><th>Monto</th><th>Comisión</th><th>Inv. Ads</th><th>Factura</th><th>Banco</th></tr></thead>
+      <tbody id="tbody-ventas-det"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CALENDARIO RENOVACIONES -->
+<div class="page" id="page-cal-renovaciones">
+  <div class="page-titulo">Calendario de renovaciones</div>
+  <div class="page-sub">Vencimientos por día — drag and drop para reprogramar</div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+    <button class="btn btn-outline" onclick="cambiarMesRen(-1)">← Mes anterior</button>
+    <div style="font-weight:600;font-size:14px;min-width:200px;text-align:center" id="cal-ren-titulo"></div>
+    <button class="btn btn-outline" onclick="cambiarMesRen(1)">Mes siguiente →</button>
+    <button class="btn btn-outline" onclick="calRenBase=new Date();renderCalRen()">Hoy</button>
+    <select class="sel" onchange="filCalRen=this.value;renderCalRen()">
+      <option value="">Todos</option>
+      <option value="pendiente">Pendientes</option>
+      <option value="vencido">Vencidos</option>
+      <option value="renovado">Pagados</option>
+      <option value="reprogramado">Reprogramados</option>
+    </select>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px" id="cal-ren-semanas"></div>
+<div id="cal-ren-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+</div>
+
+<!-- GOOGLE ADS -->
+<div class="page" id="page-googleads">
+  <div class="page-titulo">Google Ads</div>
+  <div class="page-sub">Rendimiento de campañas por cliente</div>
+  <div id="gads-lista">
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn btn-outline" id="btn-hoy" onclick="setPeriodoAds('hoy',this)">Hoy</button>
+    <button class="btn btn-outline" id="btn-ayer" onclick="setPeriodoAds('ayer',this)">Ayer</button>
+    <button class="btn btn-outline" id="btn-semana" onclick="setPeriodoAds('semana',this)">Esta semana</button>
+    <button class="btn btn-primary" id="btn-mes" onclick="setPeriodoAds('mes',this)">Este mes</button>
+    <button class="btn btn-outline" id="btn-mes_pasado" onclick="setPeriodoAds('mes_pasado',this)">Mes pasado</button>
+    <select class="sel" id="fil-gads-plan" onchange="renderGadsTabla()"><option value="">Todos los planes</option></select>
+  </div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)" id="kpi-gads"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Clientes</div>
+      <input class="inp" style="width:160px" placeholder="Buscar..." oninput="filtrarSimple(this.value,'tbody-gads')">
+    </div>
+    <table>
+      <thead><tr><th>Cliente</th><th>Plan</th><th>Monto</th><th>Inv. Ads</th><th>Rentabilidad</th><th>ID Google Ads</th><th>Costo Ads</th><th>Últ. 30d</th><th>Impresiones</th><th>Clics</th><th>CPC</th><th></th></tr></thead>
+      <tbody id="tbody-gads"></tbody>
+    </table>
+  </div>
+  </div><!-- /gads-lista -->
+  <!-- DETALLE -->
+  <div id="gads-detalle" style="display:none">
+    <button class="back-btn" onclick="volverListaGads()">← Volver</button>
+    <div style="font-size:20px;font-weight:600;margin-bottom:4px" id="gads-det-nombre"></div>
+    <div style="font-size:12px;color:#888;margin-bottom:20px" id="gads-det-sub"></div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px" id="kpi-gads-det"></div>
+    <div class="card">
+      <div class="card-header"><div class="card-titulo">Detalle por campaña y fecha</div></div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Campaña</th><th>Impresiones</th><th>Clics</th><th>CTR</th><th>CPC</th><th>Costo</th></tr></thead>
+        <tbody id="tbody-gads-det"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+    
+    
+
+<!-- CONFIG -->
+<div class="page" id="page-config">
+  <div class="page-titulo">Configuración</div>
+  <div class="page-sub">Variables del sistema</div>
+  <div class="cfg-section"><div class="cfg-titulo">Planes</div><div class="cfg-tags" id="cfg-planes"></div><div class="cfg-add"><input id="inp-plan" placeholder="Nuevo plan..."><button class="btn btn-primary" onclick="addCfg('planes','inp-plan','cfg-planes')">+ Agregar</button></div></div>
+  <div class="cfg-section"><div class="cfg-titulo">Fuentes de leads</div><div class="cfg-tags" id="cfg-fuentes"></div><div class="cfg-add"><input id="inp-fuente" placeholder="Nueva fuente..."><button class="btn btn-primary" onclick="addCfg('fuentes','inp-fuente','cfg-fuentes')">+ Agregar</button></div></div>
+  <div class="cfg-section"><div class="cfg-titulo">Tipos de pago</div><div class="cfg-tags" id="cfg-pagos"></div><div class="cfg-add"><input id="inp-pago" placeholder="Nuevo tipo..."><button class="btn btn-primary" onclick="addCfg('pagos','inp-pago','cfg-pagos')">+ Agregar</button></div></div>
+  <div class="cfg-section"><div class="cfg-titulo">Etapas de lead</div><div class="cfg-tags" id="cfg-etapas"></div><div class="cfg-add"><input id="inp-etapa" placeholder="Nueva etapa..."><button class="btn btn-primary" onclick="addCfg('etapas','inp-etapa','cfg-etapas')">+ Agregar</button></div></div>
+  <div class="cfg-section"><div class="cfg-titulo">Estados de cliente</div><div class="cfg-tags" id="cfg-estados"></div><div class="cfg-add"><input id="inp-estado" placeholder="Nuevo estado..."><button class="btn btn-primary" onclick="addCfg('estados','inp-estado','cfg-estados')">+ Agregar</button></div></div>
+  <div class="cfg-section"><div class="cfg-titulo">Motivos de rechazo</div><div class="cfg-tags" id="cfg-motivos"></div><div class="cfg-add"><input id="inp-motivo" placeholder="Nuevo motivo..."><button class="btn btn-primary" onclick="addCfg('motivos','inp-motivo','cfg-motivos')">+ Agregar</button></div></div>
+  <div class="cfg-section"><div class="cfg-titulo">Bancos</div><div class="cfg-tags" id="cfg-bancos"></div><div class="cfg-add"><input id="inp-banco" placeholder="Nuevo banco..."><button class="btn btn-primary" onclick="addCfg('bancos','inp-banco','cfg-bancos')">+ Agregar</button></div></div>
+</div>
+
+</div><!-- /main -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL CLIENTE -->
+<div class="overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-titulo"><span id="modal-cli-titulo">Nuevo cliente</span><button class="modal-close" onclick="cerrarModal('modal-cliente')">×</button></div>
+    <div class="form-grid">
+      <div class="fg"><label>Nombre empresa <span class="req">*</span></label><input id="c-nombre"></div>
+      <div class="fg"><label>Web</label><input id="c-web"></div>
+      <div class="fg"><label>Rubro <span class="req">*</span></label><input id="c-rubro"></div>
+      <div class="fg"><label>Plan <span class="req">*</span></label><select id="c-plan"></select></div>
+      <div class="fg"><label>Monto mensual ($) <span class="req">*</span></label><input id="c-monto" type="number"></div>
+      <div class="fg"><label>Inversión Google Ads ($) <span class="req">*</span></label><input id="c-inv" type="number"></div>
+      <div class="fg"><label>Contacto <span class="req">*</span></label><input id="c-contacto"></div>
+      <div class="fg"><label>Email <span class="req">*</span></label><input id="c-email" type="email"></div>
+      <div class="fg"><label>Teléfono <span class="req">*</span></label><input id="c-tel" type="tel" oninput="this.value=this.value.replace(/[^0-9+]/g,'')"></div>
+      <div class="fg"><label>Día vencimiento <span class="req">*</span></label><input id="c-dia" type="number" min="1" max="31" placeholder="15"></div>
+      <div class="fg"><label>Tipo de pago <span class="req">*</span></label><select id="c-pago"></select></div>
+      <div class="fg"><label>Fecha inicio <span class="req">*</span></label><input id="c-inicio" type="date"></div>
+      <div class="fg"><label>Estado <span class="req">*</span></label><select id="c-estado"></select></div>
+      <div class="fg"><label>ID Google Ads</label><input id="c-gads"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-cliente" onclick="guardarCliente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CLIENTE (info + plan) -->
+<div class="overlay" id="modal-editar-cliente">
+  <div class="modal">
+    <div class="modal-titulo"><span>Editar cliente</span><button class="modal-close" onclick="cerrarModal('modal-editar-cliente')">×</button></div>
+    <div class="form-grid">
+      <div class="fg"><label>Nombre empresa</label><input id="ec-nombre"></div>
+      <div class="fg"><label>Web</label><input id="ec-web"></div>
+      <div class="fg"><label>Rubro</label><input id="ec-rubro"></div>
+      <div class="fg"><label>Contacto</label><input id="ec-contacto"></div>
+      <div class="fg"><label>Email</label><input id="ec-email" type="email"></div>
+      <div class="fg"><label>Teléfono</label><input id="ec-tel" type="tel" oninput="this.value=this.value.replace(/[^0-9+]/g,'')"></div>
+      <div class="fg"><label>Plan</label><select id="ec-plan"></select></div>
+      <div class="fg"><label>Monto mensual ($)</label><input id="ec-monto" type="number"></div>
+      <div class="fg"><label>Inversión Ads ($)</label><input id="ec-inv" type="number"></div>
+      <div class="fg"><label>Día vencimiento</label><input id="ec-dia" type="number" min="1" max="31"></div>
+      <div class="fg"><label>Tipo de pago</label><select id="ec-pago"></select></div>
+      <div class="fg"><label>Estado</label><select id="ec-estado"></select></div>
+      <div class="fg"><label>Fecha inicio</label><input id="ec-inicio" type="date"></div>
+      <div class="fg"><label>ID Google Ads</label><input id="ec-gads"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-editar-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicionCliente()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RENOVACION -->
+<div class="overlay" id="modal-renovacion">
+  <div class="modal modal-sm">
+    <div class="modal-titulo"><span id="modal-ren-titulo">Nueva renovación</span><button class="modal-close" onclick="cerrarModal('modal-renovacion')">×</button></div>
+    <div class="form-grid">
+      <div class="fg"><label>Mes</label><select id="ren-mes">
+        <option value="ene">Enero</option><option value="feb">Febrero</option>
+        <option value="mar">Marzo</option><option value="abr">Abril</option>
+        <option value="may">Mayo</option><option value="jun">Junio</option>
+        <option value="jul">Julio</option><option value="ago">Agosto</option>
+        <option value="sep">Septiembre</option><option value="oct">Octubre</option>
+        <option value="nov">Noviembre</option><option value="dic">Diciembre</option>
+      </select></div>
+      <div class="fg"><label>Año</label><select id="ren-anio">
+        <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+      </select></div>
+      <div class="fg"><label>Estado</label><select id="ren-estado">
+        <option value="pendiente">Pendiente</option>
+        <option value="renovado">Pagado</option>
+        <option value="atrasado">Atrasado</option>
+        <option value="reprogramado">Reprogramado</option>
+      </select></div>
+      <div class="fg"><label>Frecuencia</label><select id="ren-frecuencia" onchange="calcularFechaVenc()">
+        <option value="mensual">Mensual</option>
+        <option value="quincenal">Quincenal</option>
+        <option value="semanal">Semanal</option>
+      </select></div>
+      <div class="fg"><label>Fecha vencimiento</label><input id="ren-fvenc" type="date"></div>
+      <div class="fg"><label>Fecha pago</label><input id="ren-fpago" type="date" onchange="calcularFechaVenc()"></div>
+      <div class="fg"><label>Monto pagado ($)</label><input id="ren-monto" type="number"></div>
+      <div class="fg"><label>Comisión ($)</label><input id="ren-comision" type="number"></div>
+      <div class="fg"><label>Monto Ads ($)</label><input id="ren-ads" type="number"></div>
+      <div class="fg"><label>N° Factura</label><input id="ren-factura"></div>
+      <div class="fg full"><label>Banco</label><select id="ren-banco"></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-renovacion')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarRenovacion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REPROGRAMAR -->
+<div class="overlay" id="modal-reprogramar">
+  <div class="modal modal-sm">
+    <div class="modal-titulo"><span>Reprogramar renovación</span><button class="modal-close" onclick="cerrarModal('modal-reprogramar')">×</button></div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">La fecha original queda registrada. Se crea una nueva fecha de reprogramación.</p>
+    <div class="fg"><label>Nueva fecha</label><input id="fecha-reprogramacion" type="date"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-reprogramar')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarReprogramacion()">Reprogramar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LEAD -->
+<div class="overlay" id="modal-lead">
+  <div class="modal">
+    <div class="modal-titulo"><span id="modal-lead-titulo">Nuevo lead</span><button class="modal-close" onclick="cerrarModal('modal-lead')">×</button></div>
+    <div class="form-grid">
+      <div class="fg"><label>Nombre empresa <span class="req">*</span></label><input id="l-nombre"></div>
+      <div class="fg"><label>Contacto <span class="req">*</span></label><input id="l-contacto"></div>
+      <div class="fg"><label>Email <span class="req">*</span></label><input id="l-email" type="email"></div>
+      <div class="fg"><label>Teléfono</label><input id="l-tel" type="tel" oninput="this.value=this.value.replace(/[^0-9+]/g,'')"></div>
+      <div class="fg"><label>Web</label><input id="l-web"></div>
+      <div class="fg"><label>Plan de interés</label><select id="l-plan"></select></div>
+      <div class="fg"><label>Monto estimado ($)</label><input id="l-monto" type="number"></div>
+      <div class="fg"><label>Fuente</label><select id="l-fuente"></select></div>
+      <div class="fg"><label>Etapa</label><select id="l-etapa"></select></div>
+      <div class="fg"><label>Fecha contacto <span class="req">*</span></label><input id="l-fcontacto" type="date"></div>
+      <div class="fg"><label>Fecha próximo contacto</label><input id="l-fproximo" type="date"></div>
+      <div class="fg full"><label>Notas</label><textarea id="l-notas"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-lead')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-lead" onclick="guardarLead()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMENTARIO -->
+<div class="overlay" id="modal-comentario">
+  <div class="modal modal-sm">
+    <div class="modal-titulo"><span>Agregar comentario</span><button class="modal-close" onclick="cerrarModal('modal-comentario')">×</button></div>
+    <div id="com-historial" style="margin-bottom:14px;max-height:200px;overflow-y:auto;border:1px solid #f0f0f0;border-radius:8px;padding:10px;display:none"></div>
+    <div class="fg full"><label>Nuevo comentario</label><textarea id="com-texto" style="min-height:80px"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-comentario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarComentario()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MOTIVO RECHAZO -->
+<div class="overlay" id="modal-motivo">
+  <div class="modal modal-sm">
+    <div class="modal-titulo"><span>Motivo de rechazo</span><button class="modal-close" onclick="cancelarPerdido()">×</button></div>
+    <p style="font-size:13px;color:#555;margin-bottom:14px">¿Por qué no se cerró este lead?</p>
+    <div class="fg"><label>Motivo</label><select id="sel-motivo"></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cancelarPerdido()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarPerdido()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONVERTIR -->
+<div class="overlay" id="modal-convertir">
+  <div class="modal modal-sm">
+    <div class="modal-titulo"><span>Convertir a cliente</span><button class="modal-close" onclick="cancelarConversion()">×</button></div>
+    <p style="font-size:13px;color:#555;margin-bottom:14px">Completa los datos para dar de alta al cliente.</p>
+    <div class="form-grid">
+      <div class="fg"><label>Plan <span class="req">*</span></label><select id="cv-plan"></select></div>
+      <div class="fg"><label>Monto mensual ($) <span class="req">*</span></label><input id="cv-monto" type="number"></div>
+      <div class="fg"><label>Inversión Ads ($) <span class="req">*</span></label><input id="cv-inv" type="number"></div>
+      <div class="fg"><label>Día vencimiento <span class="req">*</span></label><input id="cv-dia" type="number" placeholder="15"></div>
+      <div class="fg"><label>Tipo de pago <span class="req">*</span></label><select id="cv-pago"></select></div>
+      <div class="fg"><label>Rubro <span class="req">*</span></label><input id="cv-rubro"></div>
+      <div class="fg full"><label>ID Google Ads</label><input id="cv-gads"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cancelarConversion()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarConversion()">Convertir a cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL META NUEVA -->
+<div class="overlay" id="modal-meta-nueva">
+  <div class="modal modal-sm">
+    <div class="modal-titulo"><span>Nueva meta</span><button class="modal-close" onclick="cerrarModal('modal-meta-nueva')">×</button></div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Una vez guardada no se puede modificar.</p>
+    <div class="form-grid">
+<div class="fg"><label>Mes</label><select id="meta-mes-sel">
+        <option value="ene">Enero</option><option value="feb">Febrero</option>
+        <option value="mar">Marzo</option><option value="abr">Abril</option>
+        <option value="may">Mayo</option><option value="jun">Junio</option>
+        <option value="jul">Julio</option><option value="ago">Agosto</option>
+        <option value="sep">Septiembre</option><option value="oct">Octubre</option>
+        <option value="nov">Noviembre</option><option value="dic">Diciembre</option>
+      </select></div>
+      <div class="fg"><label>Año</label><select id="meta-anio-sel">
+        <option value="25">2025</option><option value="26">2026</option><option value="27">2027</option>
+      </select></div>      <div class="fg"><label>Meta clientes nuevos</label><input id="meta-nuevos" type="number"></div>
+      <div class="fg full"><label>Meta renovaciones</label><input id="meta-ren" type="number"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-meta-nueva')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarMetaNueva()">Guardar meta</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL META REAL -->
+<div class="overlay" id="modal-meta-real">
+  <div class="modal modal-sm">
+    <div class="modal-titulo"><span id="modal-real-titulo">Actualizar real</span><button class="modal-close" onclick="cerrarModal('modal-meta-real')">×</button></div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Ingresa los reales del mes.</p>
+    <div class="form-grid">
+      <div class="fg"><label>Clientes nuevos (real)</label><input id="real-nuevos" type="number"></div>
+      <div class="fg full"><label>Renovaciones (real)</label><input id="real-ren" type="number"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-meta-real')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarReal()">Guardar real</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+const API='http://127.0.0.1:5001/api';
+let clis=[],leads=[],rens=[],metasData=[];
+let leadEdit=null,leadConv=null,leadPerdido=null,leadPerdidoEtapaAnterior=null;
+let cliEdit=null,renEdit=null,renClienteId=null,renClienteNombre=null,comLeadId=null;
+let filRes={q:'',renovacion:''};
+let filCli={q:''};
+let filLeads={q:'',fuente:'',etapa:'',mes:''};
+let filRen={q:'',estado:'',frecuencia:''};
+let renPostergando=null;
+let cfg={
+  planes:['Base','Base Plus','Premium','Premium Plus','Administración'],
+  fuentes:['Google Ads','Facebook Ads','Referido','Otro'],
+  pagos:['factura','negro'],
+  etapas:['nuevo','contactado','negociacion','cerrado','perdido'],
+  estados:['activo','perdido','no contesta','postergado'],
+  motivos:['Precio','Eligió competencia','No tenía presupuesto','No era el momento','Sin respuesta','Otro'],
+  bancos:[]
+};
+
+const fmt=n=>Math.round(n).toLocaleString('es-CL');
+const abrirModal=id=>document.getElementById(id).classList.add('open');
+const cerrarModal=id=>document.getElementById(id).classList.remove('open');
+const hoy=()=>new Date().toISOString().split('T')[0];
+
+function toast(msg,tipo='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+tipo;
+  setTimeout(()=>t.className='toast',3000);
+}
+
+function poblar(id,items){const el=document.getElementById(id);if(el)el.innerHTML=items.map(i=>`<option value="${i}">${i}</option>`).join('');}
+function sincSelects(){
+  poblar('c-plan',cfg.planes);poblar('c-pago',cfg.pagos);poblar('c-estado',cfg.estados);
+  poblar('ren-banco',cfg.bancos);
+  poblar('ec-plan',cfg.planes);poblar('ec-pago',cfg.pagos);poblar('ec-estado',cfg.estados);
+  poblar('l-plan',cfg.planes);poblar('l-fuente',cfg.fuentes);poblar('l-etapa',cfg.etapas.filter(e=>!['cerrado','perdido'].includes(e)));
+  poblar('cv-plan',cfg.planes);poblar('cv-pago',cfg.pagos);
+  poblar('sel-motivo',cfg.motivos);
+}
+const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),config:()=>renderConfig()};
+function nav(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  if(pageMap[id])pageMap[id]();
+}
+function filtrarSimple(q,id){document.getElementById(id).querySelectorAll('tr').forEach(tr=>tr.style.display=tr.textContent.toLowerCase().includes(q.toLowerCase())?'':'none');}
+
+const etapaTag=e=>({nuevo:'<span class="tag tag-blue">Nuevo</span>',contactado:'<span class="tag tag-amarillo">Contactado</span>',negociacion:'<span class="tag tag-morado">Negociación</span>',cerrado:'<span class="tag tag-verde">Vendido</span>',perdido:'<span class="tag tag-rojo">Perdido</span>'}[e]||`<span class="tag tag-gris">${e}</span>`);
+const estadoTag=e=>({activo:'<span class="tag tag-verde">Activo</span>',perdido:'<span class="tag tag-rojo">Perdido</span>','no contesta':'<span class="tag tag-amarillo">No contesta</span>',postergado:'<span class="tag tag-naranja">Postergado</span>'}[e]||`<span class="tag tag-gris">${e}</span>`);
+const tagRen=d=>d<=5?'<span class="tag tag-rojo">⚠️ Urgente</span>':d<=15?'<span class="tag tag-amarillo">⏰ Próximo</span>':'<span class="tag tag-verde">✓ OK</span>';
+const renEstadoTag=e=>({renovado:'<span class="tag tag-verde">Renovado</span>',pendiente:'<span class="tag tag-amarillo">Pendiente</span>',atrasado:'<span class="tag tag-rojo">Atrasado</span>'}[e]||`<span class="tag tag-gris">${e}</span>`);
+
+// ── RESUMEN ──
+async function cargarResumen(){
+  document.getElementById('fecha-hoy').textContent=new Date().toLocaleDateString('es-CL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  try{
+    const [res,cl]=await Promise.all([fetch(`${API}/resumen`).then(r=>r.json()),fetch(`${API}/clientes`).then(r=>r.json())]);
+    clis=Array.isArray(cl)?cl:[];
+    document.getElementById('kpi-resumen').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Clientes activos</div><div class="kpi-valor">${res.clientes_activos}</div><div class="kpi-sub info">Total cartera</div></div>
+      <div class="kpi"><div class="kpi-label">Ingresos del mes</div><div class="kpi-valor" style="font-size:18px">$${fmt(res.ingresos_mes)}</div><div class="kpi-sub ok">Facturación</div></div>
+      <div class="kpi"><div class="kpi-label">Margen del mes</div><div class="kpi-valor" style="font-size:18px">$${fmt(res.margen_mes)}</div><div class="kpi-sub ok">Ganancia neta</div></div>
+      <div class="kpi"><div class="kpi-label">Vencen esta semana</div><div class="kpi-valor">${res.vencen_semana}</div><div class="kpi-sub ${res.vencen_semana>0?'danger':'ok'}">${res.vencen_semana>0?'Atención':'Todo OK'}</div></div>
+      <div class="kpi"><div class="kpi-label">Leads activos</div><div class="kpi-valor">${res.leads_activos}</div><div class="kpi-sub info">Sin cerrar</div></div>
+    `;
+    const planes=[...new Set(clis.map(c=>c.plan))];
+    const sel=document.getElementById('fil-res-plan');
+    sel.innerHTML='<option value="">Todos los planes</option>'+planes.map(p=>`<option>${p}</option>`).join('');
+    renderResumen();
+  }catch(e){document.getElementById('kpi-resumen').innerHTML=`<td colspan="5" style="color:#A32D2D;padding:20px">Error: ${e.message}</td>`;}
+}
+
+function renderResumen(){
+  let data=[...clis].filter(c=>c.estado!=='perdido');
+  const plan=document.getElementById('fil-res-plan')?.value||'';
+  if(plan)data=data.filter(c=>c.plan===plan);
+  if(filRes.renovacion)data=data.filter(c=>c.estado_renovacion===filRes.renovacion);
+  if(filRes.q)data=data.filter(c=>c.nombre.toLowerCase().includes(filRes.q.toLowerCase()));
+  document.getElementById('tbody-resumen').innerHTML=data.map(c=>`<tr>
+    <td><strong>${c.nombre}</strong><br><span style="font-size:10px;color:#888">${c.rubro||''}</span></td>
+    <td><span class="tag tag-blue">${c.plan}</span></td>
+    <td>$${fmt(c.monto)}</td>
+    <td class="ok">$${fmt(c.rentabilidad)}</td>
+    <td>${tagRen(c.dias_vencimiento)} en ${c.dias_vencimiento}d</td>
+    <td>${tagRen(c.dias_vencimiento)}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="irDetalle('${c.id}')">Ver</button></td>
+  </tr>`).join('');
+}
+
+// ── CLIENTES ──
+async function cargarClientes(){
+  try{
+    const cl=await fetch(`${API}/clientes`).then(r=>r.json());
+    clis=Array.isArray(cl)?cl:[];
+    const activos=clis.filter(c=>c.estado!=='perdido').length;
+    const noContesta=clis.filter(c=>c.estado==='no contesta').length;
+    const postergados=clis.filter(c=>c.estado==='postergado').length;
+    const otro=clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).length;
+    const perdidos=clis.filter(c=>c.estado==='perdido').length;
+    const activosClis=clis.filter(c=>c.estado!=='perdido');
+    const totalMonto=activosClis.reduce((s,c)=>s+(c.monto||0),0);
+    const totalInv=activosClis.reduce((s,c)=>s+(c.inversion_ads||0),0);
+    const totalRent=totalMonto-totalInv;
+    document.getElementById('kpi-clientes').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Activos</div><div class="kpi-valor">${activos}</div><div class="kpi-sub ok">$${fmt(activosClis.reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(activosClis.reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(activosClis.reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+      <div class="kpi"><div class="kpi-label">No contesta</div><div class="kpi-valor">${noContesta}</div><div class="kpi-sub warn">$${fmt(clis.filter(c=>c.estado==='no contesta').reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>c.estado==='no contesta').reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>c.estado==='no contesta').reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+      <div class="kpi"><div class="kpi-label">Postergados</div><div class="kpi-valor">${postergados}</div><div class="kpi-sub warn">$${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+      <div class="kpi"><div class="kpi-label">Otro</div><div class="kpi-valor">${otro}</div><div class="kpi-sub info">$${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+      <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${perdidos}</div><div class="kpi-sub danger">$${fmt(clis.filter(c=>c.estado==='perdido').reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>c.estado==='perdido').reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>c.estado==='perdido').reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+    `;
+    // Poblar filtros
+    const planes=[...new Set(clis.map(c=>c.plan))];
+    document.getElementById('fil-cli-plan').innerHTML='<option value="">Todos los planes</option>'+planes.map(p=>`<option>${p}</option>`).join('');
+    const estados=[...new Set(clis.map(c=>c.estado).filter(Boolean))];
+    document.getElementById('fil-cli-estado').innerHTML='<option value="">Todo estado</option>'+estados.map(e=>`<option value="${e}">${e}</option>`).join('');
+    renderClientes();
+  }catch(e){document.getElementById('tbody-clientes').innerHTML=`<tr><td colspan="9" style="color:#A32D2D;padding:20px">Error: ${e.message}</td></tr>`;}
+}
+
+function renderClientes(){
+  let data=[...clis];
+  const plan=document.getElementById('fil-cli-plan')?.value||'';
+  const pago=document.getElementById('fil-cli-pago')?.value||'';
+  const estado=document.getElementById('fil-cli-estado')?.value||'';
+  if(plan)data=data.filter(c=>c.plan===plan);
+  if(pago)data=data.filter(c=>c.tipo_pago===pago);
+  if(estado)data=data.filter(c=>c.estado===estado);
+  if(filCli.q)data=data.filter(c=>c.nombre.toLowerCase().includes(filCli.q.toLowerCase()));
+  const activosFil=data.filter(c=>c.estado!=='perdido');
+  const perdidosFil=data.filter(c=>c.estado==='perdido');
+  const noContestaFil=data.filter(c=>c.estado==='no contesta');
+  const posterganFil=data.filter(c=>c.estado==='postergado');
+  const otroFil=data.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado));
+  document.getElementById('kpi-clientes').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Activos</div><div class="kpi-valor">${activosFil.length}</div><div class="kpi-sub ok">${fmt(activosFil.reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: ${fmt(activosFil.reduce((s,c)=>s+(c.inversion_ads||0),0))} - Rent: ${fmt(activosFil.reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+    <div class="kpi"><div class="kpi-label">No contesta</div><div class="kpi-valor">${noContestaFil.length}</div><div class="kpi-sub warn">${fmt(noContestaFil.reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: ${fmt(noContestaFil.reduce((s,c)=>s+(c.inversion_ads||0),0))} - Rent: ${fmt(noContestaFil.reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+    <div class="kpi"><div class="kpi-label">Postergados</div><div class="kpi-valor">${posterganFil.length}</div><div class="kpi-sub warn">${fmt(posterganFil.reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: ${fmt(posterganFil.reduce((s,c)=>s+(c.inversion_ads||0),0))} - Rent: ${fmt(posterganFil.reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+    <div class="kpi"><div class="kpi-label">Otro</div><div class="kpi-valor">${otroFil.length}</div><div class="kpi-sub info">${fmt(otroFil.reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: ${fmt(otroFil.reduce((s,c)=>s+(c.inversion_ads||0),0))} - Rent: ${fmt(otroFil.reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+    <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${perdidosFil.length}</div><div class="kpi-sub danger">${fmt(perdidosFil.reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: ${fmt(perdidosFil.reduce((s,c)=>s+(c.inversion_ads||0),0))} - Rent: ${fmt(perdidosFil.reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+  `;
+  document.getElementById('tbody-clientes').innerHTML=data.map(c=>`<tr>
+    <td><strong>${c.nombre}</strong><br><span style="font-size:10px;color:#888">${c.contacto}</span></td>
+    <td><span class="tag tag-blue">${c.plan}</span></td>
+    <td>${fmt(c.monto)}/mes</td>
+    <td class="ok">${fmt(c.rentabilidad)}</td>
+    <td>${c.fecha_inicio||'-'}</td>
+    <td>Día ${c.dia_vencimiento} <span style="color:#888;font-size:10px">(${c.dias_vencimiento}d)</span></td>
+    <td><span class="tag ${c.tipo_pago==='factura'?'tag-verde':'tag-gris'}">${c.tipo_pago==='factura'?'Factura':'Sin factura'}</span></td>
+    <td>
+      <select class="sel" style="font-size:11px" onchange="cambiarEstadoCliente('${c.id}',this.value)">
+        ${cfg.estados.map(e=>`<option value="${e}" ${(c.estado||'activo')===e?'selected':''}>${e.charAt(0).toUpperCase()+e.slice(1)}</option>`).join('')}
+      </select>
+    </td>
+    <td><button class="btn btn-outline btn-sm" onclick="verDetalle('${c.id}')">Detalle</button></td>
+  </tr>`).join('');
+}
+
+async function irDetalle(id){nav('clientes',document.querySelectorAll('.nav-item')[1]);await cargarClientes();await verDetalle(id);}
+
+async function verDetalle(id){
+  try{
+    const c=await fetch(`${API}/clientes/${id}`).then(r=>r.json());
+    const hist=c.renovaciones||[];
+    document.getElementById('cli-lista').style.display='none';
+    document.getElementById('cli-detalle').style.display='block';
+    const histHtml=hist.length?`
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Mes</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Estado</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Vencimiento</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Fecha pago</th>
+          <th style="text-align:right;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Monto</th>
+          <th style="text-align:right;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Comisión</th>
+          <th style="text-align:right;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Monto Ads</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Factura</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Banco</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #f0f0f0;color:#888;font-size:10px;text-transform:uppercase">Frecuencia</th>
+          <th style="padding:8px;border-bottom:1px solid #f0f0f0"></th>
+        </tr></thead>
+        <tbody>
+          ${hist.map(r=>`<tr style="border-bottom:1px solid #f8f8f8">
+            <td style="padding:8px"><strong>${r.mes} ${r.anio||''}</strong></td>
+            <td style="padding:8px">${renEstadoTag(r.estado)}</td>
+            <td style="padding:8px;color:#888">${r.fecha_vencimiento||'-'}</td>
+            <td style="padding:8px;color:#888">${r.fecha_pago||'-'}</td>
+            <td style="padding:8px;text-align:right">${r.monto?'$'+fmt(r.monto):'-'}</td>
+            <td style="padding:8px;text-align:right">${r.comision?'$'+fmt(r.comision):'-'}</td>
+            <td style="padding:8px;text-align:right">${r.monto_ads?'$'+fmt(r.monto_ads):'-'}</td>
+            <td style="padding:8px;color:#888">${r.factura||'-'}</td>
+            <td style="padding:8px;color:#888">${r.banco||'-'}</td>
+            <td style="padding:8px"><span class="tag tag-gris">${r.frecuencia||'mensual'}</span></td>
+            <td style="padding:8px;white-space:nowrap">
+              <button class="btn btn-outline btn-sm" onclick="abrirEditarRenovacion('${r.id}','${c.id}','${r.mes}','${r.anio||2026}','${r.estado}','${r.fecha||''}','${r.fecha_pago||''}','${r.fecha_vencimiento||''}',${r.monto||0},${r.comision||0},${r.monto_ads||0},'${r.factura||''}','${r.banco||''}','${r.frecuencia||'mensual'}')">✏️</button>
+              ${r.estado!=='renovado'?`<button class="btn btn-outline btn-sm" onclick="abrirReprogramar('${r.id}')">📅</button>`:''}
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`:'<div style="font-size:12px;color:#aaa">Sin historial</div>';
+
+    document.getElementById('cli-detalle').innerHTML=`
+      <button class="back-btn" onclick="volverLista()">← Volver</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:22px;font-weight:700">${c.nombre}</div>
+          <div style="font-size:12px;color:#888;margin-top:4px">${c.rubro||''} · <span class="tag tag-blue">${c.plan}</span> · ${estadoTag(c.estado||'activo')}</div>
+        </div>
+        <button class="btn btn-outline" onclick="abrirEditarCliente('${c.id}')">✏️ Editar</button>
+      </div>
+      <div class="det-grid">
+        <div class="det-card">
+          <div class="det-titulo">Información</div>
+          <div class="det-row"><span class="det-k">Contacto</span><span class="det-v">${c.contacto}</span></div>
+          <div class="det-row"><span class="det-k">Email</span><span class="det-v">${c.email}</span></div>
+          <div class="det-row"><span class="det-k">Teléfono</span><span class="det-v">${c.telefono}</span></div>
+          <div class="det-row"><span class="det-k">Web</span><span class="det-v">${c.web}</span></div>
+          <div class="det-row"><span class="det-k">Inicio</span><span class="det-v">${c.fecha_inicio||'-'}</span></div>
+          <div class="det-row"><span class="det-k">Tipo pago</span><span class="det-v">${c.tipo_pago==='factura'?'Con factura':'Sin factura'}</span></div>
+          <div class="det-row"><span class="det-k">ID Google Ads</span><span class="det-v">${c.google_ads_id||'-'}</span></div>
+        </div>
+        <div class="det-card">
+          <div class="det-titulo">Plan y facturación</div>
+          <div class="det-row"><span class="det-k">Plan</span><span class="det-v">${c.plan}</span></div>
+          <div class="det-row"><span class="det-k">Monto mensual</span><span class="det-v">$${fmt(c.monto)}</span></div>
+          <div class="det-row"><span class="det-k">Inversión Ads</span><span class="det-v">$${fmt(c.inversion_ads)}</span></div>
+          <div class="det-row"><span class="det-k">Rentabilidad</span><span class="det-v ok">$${fmt(c.rentabilidad)}</span></div>
+          <div class="det-row"><span class="det-k">Vencimiento</span><span class="det-v">Día ${c.dia_vencimiento} (${c.dias_vencimiento}d)</span></div>
+        </div>
+        <div class="det-card" style="grid-column:span 2">
+          <div class="det-titulo">
+            <span>Historial de renovaciones</span>
+            <button class="btn btn-primary btn-sm" onclick="abrirNuevaRenovacion('${c.id}','${c.nombre}',${c.monto})">+ Nueva renovación</button>
+          </div>
+          ${histHtml}
+        </div>
+      </div>
+    `;
+  }catch(e){document.getElementById('cli-detalle').innerHTML=`<button class="back-btn" onclick="volverLista()">← Volver</button><div style="color:#A32D2D;padding:20px">Error: ${e.message}</div>`;}
+}
+
+function volverLista(){document.getElementById('cli-lista').style.display='block';document.getElementById('cli-detalle').style.display='none';}
+
+function abrirModalCliente(id){
+  cliEdit=id||null;
+  sincSelects();
+  document.getElementById('modal-cli-titulo').textContent=id?'Editar cliente':'Nuevo cliente';
+  if(!id){
+    ['c-nombre','c-web','c-rubro','c-contacto','c-email','c-tel','c-gads'].forEach(x=>document.getElementById(x).value='');
+    ['c-monto','c-inv','c-dia'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('c-inicio').value=hoy();
+  }
+  abrirModal('modal-cliente');
+}
+
+async function guardarCliente(){
+  const reqs=['c-nombre','c-rubro','c-contacto','c-email','c-monto','c-inv','c-tel','c-dia','c-inicio'];
+  let ok=true;
+  reqs.forEach(id=>{const el=document.getElementById(id);if(!el.value.trim()){el.classList.add('err-field');ok=false;}else el.classList.remove('err-field');});
+  if(!ok){toast('Completa los campos obligatorios','error');return;}
+  const email=document.getElementById('c-email').value;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById('c-email').classList.add('err-field');toast('Email inválido','error');return;}
+  const btn=document.getElementById('btn-guardar-cliente');
+  btn.textContent='Guardando...';btn.disabled=true;
+  try{
+    await fetch(`${API}/clientes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      nombre:document.getElementById('c-nombre').value,web:document.getElementById('c-web').value,
+      rubro:document.getElementById('c-rubro').value,plan:document.getElementById('c-plan').value,
+      monto:parseInt(document.getElementById('c-monto').value)||0,
+      inversion_ads:parseInt(document.getElementById('c-inv').value)||0,
+      contacto:document.getElementById('c-contacto').value,email,
+      telefono:document.getElementById('c-tel').value,
+      dia_vencimiento:parseInt(document.getElementById('c-dia').value)||15,
+      tipo_pago:document.getElementById('c-pago').value,
+      fecha_inicio:document.getElementById('c-inicio').value,
+      google_ads_id:document.getElementById('c-gads').value,
+      estado:document.getElementById('c-estado').value||'activo'
+    })});
+    cerrarModal('modal-cliente');toast('Cliente creado ✓');cargarClientes();
+  }catch(e){toast('Error: '+e.message,'error');}
+  btn.textContent='Guardar';btn.disabled=false;
+}
+
+function abrirEditarCliente(id){
+  const c=clis.find(x=>x.id===id);if(!c)return;
+  cliEdit=id;sincSelects();
+  document.getElementById('ec-nombre').value=c.nombre||'';
+  document.getElementById('ec-web').value=c.web||'';
+  document.getElementById('ec-rubro').value=c.rubro||'';
+  document.getElementById('ec-contacto').value=c.contacto||'';
+  document.getElementById('ec-email').value=c.email||'';
+  document.getElementById('ec-tel').value=c.telefono||'';
+  document.getElementById('ec-plan').value=c.plan||'';
+  document.getElementById('ec-monto').value=c.monto||'';
+  document.getElementById('ec-inv').value=c.inversion_ads||'';
+  document.getElementById('ec-dia').value=c.dia_vencimiento||'';
+  document.getElementById('ec-pago').value=c.tipo_pago||'';
+  document.getElementById('ec-estado').value=c.estado||'activo';
+  document.getElementById('ec-inicio').value=c.fecha_inicio||'';
+  document.getElementById('ec-gads').value=c.google_ads_id||'';
+  abrirModal('modal-editar-cliente');
+}
+
+async function guardarEdicionCliente(){
+  if(!cliEdit)return;
+  try{
+    await fetch(`${API}/clientes/${cliEdit}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      nombre:document.getElementById('ec-nombre').value,web:document.getElementById('ec-web').value,
+      rubro:document.getElementById('ec-rubro').value,contacto:document.getElementById('ec-contacto').value,
+      email:document.getElementById('ec-email').value,telefono:document.getElementById('ec-tel').value,
+      plan:document.getElementById('ec-plan').value,monto:parseInt(document.getElementById('ec-monto').value)||0,
+      inversion_ads:parseInt(document.getElementById('ec-inv').value)||0,
+      dia_vencimiento:parseInt(document.getElementById('ec-dia').value)||15,
+      tipo_pago:document.getElementById('ec-pago').value,estado:document.getElementById('ec-estado').value,
+      fecha_inicio:document.getElementById('ec-inicio').value,
+      google_ads_id:document.getElementById('ec-gads').value,
+      fecha_perdido:document.getElementById('ec-estado').value==='perdido'?hoy():'',
+    })});
+    cerrarModal('modal-editar-cliente');toast('Cliente actualizado ✓');
+    await cargarClientes();await verDetalle(cliEdit);cliEdit=null;
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+// ── RENOVACIONES CRUD ──
+
+let renReprogramando=null;
+
+function abrirNuevaRenovacion(cid,nombre,monto){
+  renEdit=null;renClienteId=cid;renClienteNombre=nombre;
+  document.getElementById('modal-ren-titulo').textContent='Nueva renovación — '+nombre;
+  const hoyD=new Date();
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  document.getElementById('ren-mes').value=meses[hoyD.getMonth()];
+  document.getElementById('ren-anio').value=hoyD.getFullYear();
+  document.getElementById('ren-estado').value='pendiente';
+  document.getElementById('ren-frecuencia').value='mensual';
+  document.getElementById('ren-fvenc').value='';
+  document.getElementById('ren-fpago').value='';
+  document.getElementById('ren-monto').value=monto||'';
+  document.getElementById('ren-comision').value=monto?Math.round(monto*0.25):'';
+  document.getElementById('ren-ads').value='';
+  // Buscar inversión ads del cliente
+  const cliData=clis.find(x=>x.id===cid);
+  if(cliData) document.getElementById('ren-ads').value=cliData.inversion_ads||'';
+  document.getElementById('ren-factura').value='';
+  document.getElementById('ren-banco').value='';
+  abrirModal('modal-renovacion');
+}
+
+function abrirEditarRenovacion(rid,cid,mes,anio,estado,fecha,fpago,fvenc,monto,comision,ads,factura,banco,frecuencia){
+  renEdit=rid;renClienteId=cid;
+  document.getElementById('modal-ren-titulo').textContent='Editar renovación';
+  document.getElementById('ren-mes').value=mes||'ene';
+  document.getElementById('ren-anio').value=anio||'2026';
+  document.getElementById('ren-estado').value=estado||'pendiente';
+  document.getElementById('ren-frecuencia').value=frecuencia||'mensual';
+  document.getElementById('ren-fvenc').value=fvenc||'';
+  document.getElementById('ren-fpago').value=fpago||'';
+  document.getElementById('ren-monto').value=monto||'';
+  document.getElementById('ren-comision').value=comision||'';
+  document.getElementById('ren-ads').value=ads||'';
+  document.getElementById('ren-factura').value=factura||'';
+  document.getElementById('ren-banco').value=banco||'';
+  // Bloquear campos si está pagado
+  const pagado=estado==='renovado';
+  ['ren-mes','ren-anio','ren-estado','ren-frecuencia','ren-fvenc','ren-fpago','ren-monto','ren-comision','ren-ads','ren-factura','ren-banco'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.disabled=pagado;
+  });
+  document.getElementById('modal-renovacion').querySelector('.btn-primary').style.display=pagado?'none':'';
+  abrirModal('modal-renovacion');
+}
+
+async function guardarRenovacion(){
+    console.log('guardarRenovacion llamada, renEdit:', renEdit);
+    const estado=document.getElementById('ren-estado').value;
+  const data={
+    mes:document.getElementById('ren-mes').value,
+    anio:document.getElementById('ren-anio').value,
+    estado,
+    frecuencia:document.getElementById('ren-frecuencia').value,
+    fecha_vencimiento:document.getElementById('ren-fvenc').value,
+    fecha_pago:document.getElementById('ren-fpago').value,
+    monto:parseInt(document.getElementById('ren-monto').value)||0,
+    comision:parseInt(document.getElementById('ren-comision').value)||0,
+    monto_ads:parseInt(document.getElementById('ren-ads').value)||0,
+    factura:document.getElementById('ren-factura').value,
+    banco:document.getElementById('ren-banco').value,
+  };
+  try{
+    if(renEdit){
+      console.log('renEdit:',renEdit,'estado:',estado,'fpago:',document.getElementById('ren-fpago').value);
+      // Si se marca como pagado usar endpoint especial
+      if(estado==='renovado'&&document.getElementById('ren-fpago').value){
+        const res=await fetch(`${API}/renovaciones/${renEdit}/pagar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fecha_pago:data.fecha_pago})});
+        const result=await res.json();
+        toast(`✓ Pagado. Próximo: ${result.siguiente_fecha||''}`);
+      } else {
+        await fetch(`${API}/renovaciones/${renEdit}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        toast('Renovación actualizada ✓');
+      }
+    } else {
+      data.id_cliente=renClienteId;
+      data.nombre_cliente=renClienteNombre;
+      const res=await fetch(`${API}/renovaciones`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const nueva=await res.json();
+      // Si se crea como pagada, generar siguiente período automáticamente
+      if(data.estado==='renovado'&&data.fecha_pago&&nueva.id){
+        await fetch(`${API}/renovaciones/${nueva.id}/pagar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fecha_pago:data.fecha_pago})});
+      }
+      toast('Renovación creada ✓');
+    }
+    cerrarModal('modal-renovacion');
+    if(renClienteId) await verDetalle(renClienteId);
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+function abrirReprogramar(rid){
+  renReprogramando=rid;
+  document.getElementById('fecha-reprogramacion').value='';
+  abrirModal('modal-reprogramar');
+}
+
+async function confirmarReprogramacion(){
+  if(!renReprogramando)return;
+  const fecha=document.getElementById('fecha-reprogramacion').value;
+  if(!fecha){toast('Selecciona una fecha','error');return;}
+  try{
+    await fetch(`${API}/renovaciones/${renReprogramando}/reprogramar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fecha_reprogramacion:fecha})});
+    cerrarModal('modal-reprogramar');renReprogramando=null;
+    toast('Reprogramado ✓');
+    if(renClienteId) await verDetalle(renClienteId);
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+
+
+// ── LEADS ──
+async function cargarLeads(){
+  try{
+    const ld=await fetch(`${API}/leads`).then(r=>r.json());
+    leads=Array.isArray(ld)?ld:[];
+    const cont={nuevo:0,contactado:0,negociacion:0,'no contesta':0,cerrado:0,perdido:0};
+    const montos={nuevo:0,contactado:0,negociacion:0,'no contesta':0,cerrado:0,perdido:0};
+    leads.forEach(l=>{
+      if(cont[l.etapa]!==undefined){
+        cont[l.etapa]++;
+        montos[l.etapa]+=(l.monto_estimado||0);
+      }
+    });
+    const montoTotal=Object.entries(montos).filter(([k])=>!['cerrado','perdido'].includes(k)).reduce((s,[,v])=>s+v,0);
+    const activos=cont.nuevo+cont.contactado+cont.negociacion;
+    document.getElementById('badge-leads').textContent=activos;
+    const total=leads.length;
+    const tasa=total>0?Math.round(cont.cerrado/total*100):0;
+    // Stats por mes
+    const ventasPorMes={};
+    leads.filter(l=>l.etapa==='cerrado'&&l.fecha_venta).forEach(l=>{
+      const m=mesFechaStr(l.fecha_venta);if(m)ventasPorMes[m]=(ventasPorMes[m]||0)+1;
+    });
+    const mesesV=Object.keys(ventasPorMes).sort();
+    document.getElementById('stats-leads').innerHTML=mesesV.length?`
+      <div style="background:white;border-radius:12px;border:1px solid #ececec;padding:14px 18px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:10px">Vendidos por mes</div>
+        <div class="stats-mes-wrap">${mesesV.map(m=>`<div class="stats-mes-item"><div class="stats-mes-num">${ventasPorMes[m]}</div><div class="stats-mes-lbl">${m}</div></div>`).join('')}</div>
+      </div>`:'';
+   const totalActivos=Object.entries(cont).filter(([k])=>!['cerrado','perdido'].includes(k)).reduce((s,[,v])=>s+v,0);
+    document.getElementById('kpi-leads').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Total leads</div><div class="kpi-valor">${totalActivos}</div><div class="kpi-sub info">$${fmt(montoTotal)}</div></div>
+      <div class="kpi"><div class="kpi-label">Nuevos</div><div class="kpi-valor">${cont.nuevo}</div><div class="kpi-sub warn">$${fmt(montos.nuevo)}</div></div>
+      <div class="kpi"><div class="kpi-label">Contactados</div><div class="kpi-valor">${cont.contactado}</div><div class="kpi-sub info">$${fmt(montos.contactado)}</div></div>
+      <div class="kpi"><div class="kpi-label">En negociación</div><div class="kpi-valor">${cont.negociacion}</div><div class="kpi-sub info">$${fmt(montos.negociacion)}</div></div>
+      <div class="kpi"><div class="kpi-label">No contesta</div><div class="kpi-valor">${cont['no contesta']}</div><div class="kpi-sub warn">$${fmt(montos['no contesta'])}</div></div>
+      <div class="kpi"><div class="kpi-label">Vendidos</div><div class="kpi-valor">${cont.cerrado}</div><div class="kpi-sub ok">$${fmt(montos.cerrado)}</div></div>
+      <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${cont.perdido}</div><div class="kpi-sub danger">$${fmt(montos.perdido)}</div></div>
+      <div class="kpi"><div class="kpi-label">Tasa de cierre</div><div class="kpi-valor">${tasa}%</div><div class="kpi-sub ${tasa>=20?'ok':'warn'}">Del total</div></div>
+    `;
+    // Filtros dinámicos
+    const fuentes=[...new Set(leads.map(l=>l.fuente).filter(Boolean))];
+    const selF=document.getElementById('fil-leads-fuente');
+    selF.innerHTML='<option value="">Toda fuente</option>'+fuentes.map(f=>`<option>${f}</option>`).join('');
+    const meses=[...new Set(leads.map(l=>mesFechaStr(l.fecha)).filter(Boolean))].sort();
+    const selM=document.getElementById('fil-leads-mes');
+    const curM=selM.value;
+    selM.innerHTML='<option value="">Todos los meses</option>'+meses.map(m=>`<option value="${m}" ${m===curM?'selected':''}>${m}</option>`).join('');
+    renderLeads();
+  }catch(e){document.getElementById('kpi-leads').innerHTML=`<div style="color:#A32D2D;grid-column:span 5;padding:20px">Error: ${e.message}</div>`;}
+}
+
+function renderLeads(){
+  let data=[...leads];
+  if(filLeads.fuente)data=data.filter(l=>l.fuente===filLeads.fuente);
+  if(filLeads.etapa)data=data.filter(l=>l.etapa===filLeads.etapa);
+  if(filLeads.mes)data=data.filter(l=>mesFechaStr(l.fecha)===filLeads.mes);
+  if(filLeads.q)data=data.filter(l=>(l.nombre+l.contacto).toLowerCase().includes(filLeads.q.toLowerCase()));
+  document.getElementById('tbody-leads').innerHTML=data.map(l=>{
+    const ultComentario=getUltimoComentario(l.comentarios);
+    let acciones='';
+    if(l.etapa==='cerrado'){
+      acciones=`<div style="display:flex;align-items:center;gap:6px">${etapaTag(l.etapa)}<span style="font-size:10px;color:#888">${l.fecha_venta||''}</span></div>`;
+    }else if(l.etapa==='perdido'){
+      acciones=`<div style="display:flex;flex-direction:column;gap:4px">
+        ${etapaTag(l.etapa)}
+        ${l.motivo_rechazo?`<span style="font-size:10px;color:#888">Motivo: ${l.motivo_rechazo}</span>`:''}
+        <div style="display:flex;gap:4px;margin-top:2px">
+          <select class="sel" style="font-size:11px" onchange="cambiarEtapaDesde('${l.id}',this.value,this)">
+            <option value="">Cambiar etapa...</option>
+            <option value="nuevo">Nuevo</option><option value="contactado">Contactado</option><option value="negociacion">Negociación</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="abrirModalLead('${l.id}')">✏️</button>
+          <button class="btn btn-outline btn-sm" onclick="abrirComentario('${l.id}')">💬</button>
+        </div>
+      </div>`;
+    }else{
+      acciones=`<div style="display:flex;gap:4px;flex-wrap:wrap">
+        <select class="sel" style="font-size:11px" onchange="cambiarEtapa('${l.id}',this.value,this)">
+          ${cfg.etapas.filter(e=>!['cerrado','perdido'].includes(e)).map(e=>`<option value="${e}" ${l.etapa===e?'selected':''}>${e.charAt(0).toUpperCase()+e.slice(1)}</option>`).join('')}
+          <option value="cerrado">Vendido</option>
+          <option value="perdido">Perdido</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="abrirModalLead('${l.id}')">✏️</button>
+        <button class="btn btn-outline btn-sm" onclick="abrirComentario('${l.id}')">💬</button>
+      </div>`;
+    }
+    return `<tr>
+      <td><strong>${l.nombre}</strong></td>
+      <td>${l.contacto}<br><span style="font-size:10px;color:#888">${l.email}</span></td>
+      <td>${l.plan_interes?`<span class="tag tag-blue">${l.plan_interes}</span>`:'-'}${l.monto_estimado?`<br><span style="font-size:10px;color:#888">$${fmt(l.monto_estimado)}</span>`:''}</td>
+      <td>${l.fuente||'-'}</td>
+      <td>${l.fecha}</td>
+      <td>${etapaTag(l.etapa)}</td>
+      <td style="max-width:160px;font-size:11px;color:#888">${ultComentario}</td>
+      <td>${acciones}</td>
+    </tr>`;
+  }).join('');
+}
+
+function getUltimoComentario(comentariosStr){
+  if(!comentariosStr)return '-';
+  try{
+    const coms=JSON.parse(comentariosStr);
+    if(!coms.length)return '-';
+    const ult=coms[coms.length-1];
+    return `<span style="color:#aaa;font-size:10px">${ult.fecha}</span><br>${ult.texto}`;
+  }catch{return comentariosStr.substring(0,80)||'-';}
+}
+
+function abrirModalLead(id){
+  leadEdit=id||null;
+  sincSelects();
+  document.getElementById('modal-lead-titulo').textContent=id?'Editar lead':'Nuevo lead';
+  if(id){
+    const l=leads.find(x=>x.id===id);
+    if(l){
+      document.getElementById('l-nombre').value=l.nombre||'';
+      document.getElementById('l-contacto').value=l.contacto||'';
+      document.getElementById('l-email').value=l.email||'';
+      document.getElementById('l-tel').value=l.telefono||'';
+      document.getElementById('l-web').value=l.web||'';
+      document.getElementById('l-plan').value=l.plan_interes||'';
+      document.getElementById('l-monto').value=l.monto_estimado||'';
+      document.getElementById('l-fuente').value=l.fuente||'';
+      document.getElementById('l-etapa').value=l.etapa||'nuevo';
+      document.getElementById('l-fcontacto').value=l.fecha_contacto||'';
+      document.getElementById('l-fproximo').value=l.fecha_proximo_contacto||'';
+      document.getElementById('l-notas').value=l.notas||'';
+    }
+  }else{
+    ['l-nombre','l-contacto','l-email','l-tel','l-web','l-monto','l-notas'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('l-fcontacto').value=hoy();
+    document.getElementById('l-fproximo').value='';
+  }
+  abrirModal('modal-lead');
+}
+
+async function guardarLead(){
+  const reqs=['l-nombre','l-contacto','l-email','l-fcontacto'];
+  let ok=true;
+  reqs.forEach(id=>{const el=document.getElementById(id);if(!el.value.trim()){el.classList.add('err-field');ok=false;}else el.classList.remove('err-field');});
+  if(!ok){toast('Completa los campos obligatorios','error');return;}
+  const email=document.getElementById('l-email').value;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById('l-email').classList.add('err-field');toast('Email inválido','error');return;}
+  const btn=document.getElementById('btn-guardar-lead');
+  btn.textContent='Guardando...';btn.disabled=true;
+  const data={
+    nombre:document.getElementById('l-nombre').value,contacto:document.getElementById('l-contacto').value,
+    email,telefono:document.getElementById('l-tel').value,web:document.getElementById('l-web').value,
+    plan_interes:document.getElementById('l-plan').value,monto_estimado:parseInt(document.getElementById('l-monto').value)||0,
+    fuente:document.getElementById('l-fuente').value,etapa:document.getElementById('l-etapa').value,
+    fecha_contacto:document.getElementById('l-fcontacto').value,fecha_proximo_contacto:document.getElementById('l-fproximo').value,notas:document.getElementById('l-notas').value
+  };
+  try{
+    if(leadEdit){
+      await fetch(`${API}/leads/${leadEdit}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      toast('Lead actualizado ✓');
+    }else{
+      await fetch(`${API}/leads`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      toast('Lead creado ✓');
+    }
+    cerrarModal('modal-lead');leadEdit=null;cargarLeads();
+  }catch(e){toast('Error: '+e.message,'error');}
+  btn.textContent='Guardar';btn.disabled=false;
+}
+
+async function cambiarEtapa(id,etapa,selectEl){
+  if(!etapa)return;
+  if(etapa==='perdido'){
+    leadPerdido=id;leadPerdidoEtapaAnterior=leads.find(l=>l.id===id)?.etapa||'nuevo';
+    poblar('sel-motivo',cfg.motivos);abrirModal('modal-motivo');
+    if(selectEl)selectEl.value=leadPerdidoEtapaAnterior;return;
+  }
+  if(etapa==='cerrado'){
+    leadConv=id;sincSelects();
+    const l=leads.find(x=>x.id===id);
+    if(l&&l.plan_interes)document.getElementById('cv-plan').value=l.plan_interes;
+    if(l&&l.monto_estimado)document.getElementById('cv-monto').value=l.monto_estimado;
+    ['cv-inv','cv-dia','cv-gads','cv-rubro'].forEach(x=>document.getElementById(x).value='');
+    abrirModal('modal-convertir');
+    if(selectEl)selectEl.value=leads.find(l=>l.id===id)?.etapa||'nuevo';return;
+  }
+  try{
+    await fetch(`${API}/leads/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({etapa})});
+    cargarLeads();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function cambiarEtapaDesde(id,etapa,selectEl){
+  if(!etapa)return;
+  try{
+    await fetch(`${API}/leads/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({etapa})});
+    cargarLeads();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function confirmarPerdido(){
+  if(!leadPerdido)return;
+  const motivo=document.getElementById('sel-motivo').value;
+  try{
+    await fetch(`${API}/leads/${leadPerdido}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({etapa:'perdido',motivo_rechazo:motivo,fecha_perdido:hoy()})});
+    cerrarModal('modal-motivo');leadPerdido=null;toast('Lead marcado como perdido');cargarLeads();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+function cancelarPerdido(){
+  cerrarModal('modal-motivo');leadPerdido=null;cargarLeads();
+}
+
+function cancelarConversion(){
+  cerrarModal('modal-convertir');leadConv=null;cargarLeads();
+}
+
+async function confirmarConversion(){
+  if(!leadConv)return;
+  const reqs=['cv-plan','cv-monto','cv-inv','cv-dia','cv-rubro'];
+  let ok=true;
+  reqs.forEach(id=>{const el=document.getElementById(id);if(!el.value.toString().trim()){el.classList.add('err-field');ok=false;}else el.classList.remove('err-field');});
+  if(!ok){toast('Completa los campos obligatorios','error');return;}
+  const l=leads.find(x=>x.id===leadConv);if(!l)return;
+  try{
+    await fetch(`${API}/clientes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      nombre:l.nombre,contacto:l.contacto,email:l.email,telefono:l.telefono,web:l.web||'',
+      rubro:document.getElementById('cv-rubro').value,
+      plan:document.getElementById('cv-plan').value,
+      monto:parseInt(document.getElementById('cv-monto').value)||0,
+      inversion_ads:parseInt(document.getElementById('cv-inv').value)||0,
+      dia_vencimiento:parseInt(document.getElementById('cv-dia').value)||15,
+      tipo_pago:document.getElementById('cv-pago').value,
+      google_ads_id:document.getElementById('cv-gads').value,
+      fecha_inicio:hoy(),estado:'activo'
+    })});
+    await fetch(`${API}/leads/${leadConv}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({etapa:'cerrado',fecha_venta:hoy()})});
+    cerrarModal('modal-convertir');leadConv=null;toast('✅ Cliente creado exitosamente');cargarLeads();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+// COMENTARIOS
+function abrirComentario(id){
+  comLeadId=id;
+  document.getElementById('com-texto').value='';
+  const l=leads.find(x=>x.id===id);
+  const hist=document.getElementById('com-historial');
+  let coms=[];
+  try{coms=JSON.parse(l?.comentarios||'[]');}catch{coms=[];}
+  if(coms.length){
+    hist.style.display='block';
+    hist.innerHTML=coms.map(c=>`<div style="padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="font-size:10px;color:#aaa">${c.fecha}</span><br>${c.texto}</div>`).join('');
+  }else{
+    hist.style.display='none';
+  }
+  abrirModal('modal-comentario');
+}
+
+async function guardarComentario(){
+  if(!comLeadId)return;
+  const texto=document.getElementById('com-texto').value.trim();
+  if(!texto){toast('Escribe un comentario','error');return;}
+  const l=leads.find(x=>x.id===comLeadId);
+  let coms=[];
+  try{coms=JSON.parse(l?.comentarios||'[]');}catch{coms=[];}
+  coms.push({fecha:hoy(),texto});
+  try{
+    await fetch(`${API}/leads/${comLeadId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({comentarios:JSON.stringify(coms)})});
+    if(l) l.comentarios=JSON.stringify(coms);
+    cerrarModal('modal-comentario');
+    toast('Comentario agregado ✓');
+    comLeadId=null;
+    renderLeads();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+// ── RENOVACIONES ──
+async function cargarRenovaciones(){
+  try{
+    const data=await fetch(`${API}/renovaciones`).then(r=>r.json());
+    const rens=Array.isArray(data)?data:[];
+    window._rens=rens;
+    const hoy=new Date();hoy.setHours(0,0,0,0);
+    const mesPasado=ultimosMeses(2)[0];
+    const mesAct=mesActual();
+
+    // KPIs
+    const vencidos=rens.filter(r=>r.estado==='vencido').length;
+    const pendientes=rens.filter(r=>r.estado==='pendiente'&&r.dias>=0).length;
+    const pagados=rens.filter(r=>r.estado==='renovado'&&r.mes===mesAct).length;
+    const montoSemana=rens.filter(r=>r.dias>=0&&r.dias<=7&&r.estado!=='renovado').reduce((s,r)=>s+(r.monto||0),0);
+    document.getElementById('badge-ren').textContent=vencidos||'';
+    document.getElementById('kpi-ren').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Vencidos</div><div class="kpi-valor">${vencidos}</div><div class="kpi-sub danger">${vencidos>0?'Sin pagar':'Al día'}</div></div>
+      <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-valor">${pendientes}</div><div class="kpi-sub warn">Próximos</div></div>
+      <div class="kpi"><div class="kpi-label">Pagados este mes</div><div class="kpi-valor">${pagados}</div><div class="kpi-sub ok">Renovados</div></div>
+      <div class="kpi"><div class="kpi-label">Monto próx. semana</div><div class="kpi-valor" style="font-size:16px">$${fmt(montoSemana)}</div><div class="kpi-sub info">7 días</div></div>
+      <div class="kpi"><div class="kpi-label">Total clientes</div><div class="kpi-valor">${new Set(rens.map(r=>r.id_cliente)).size}</div><div class="kpi-sub info">Activos</div></div>
+    `;
+
+    // Calendario semanal
+    const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    // Semana -1 (mes pasado vencidos)
+    const vencidosMesPasado=rens.filter(r=>r.mes===mesPasado&&r.estado==='vencido');
+    let cal=`<div class="cal-sem urgente">
+      <div class="cal-lbl">Mes anterior</div>
+      <div class="cal-rng" style="color:#E24B4A">Vencidos sin pagar</div>
+      <div class="cal-num danger">${vencidosMesPasado.length}</div>
+      <div class="cal-sub">$${fmt(vencidosMesPasado.reduce((s,r)=>s+(r.monto||0),0))}</div>
+    </div>`;
+    // Semanas 0-6
+    for(let s=0;s<7;s++){
+      const ini=new Date(hoy);ini.setDate(hoy.getDate()+s*7);
+      const fin=new Date(ini);fin.setDate(ini.getDate()+6);
+      const semRens=rens.filter(r=>{
+        if(!r.fecha_vencimiento)return false;
+        const fv=new Date(r.fecha_vencimiento);fv.setHours(0,0,0,0);
+        return fv>=ini&&fv<=fin&&r.estado!=='renovado';
+      });
+      const count=semRens.length;
+      const monto=semRens.reduce((s,r)=>s+(r.monto||0),0);
+      const cls=count>0&&s===0?'urgente':count>0&&s<=1?'proximo':'';
+      cal+=`<div class="cal-sem ${cls}">
+        <div class="cal-lbl">Sem ${s+1}</div>
+        <div class="cal-rng">${ini.getDate()} ${meses[ini.getMonth()]} – ${fin.getDate()} ${meses[fin.getMonth()]}</div>
+        <div class="cal-num ${count>0?(s===0?'danger':s<=1?'warn':'info'):'ok'}">${count}</div>
+        <div class="cal-sub">$${fmt(monto)}</div>
+      </div>`;
+    }
+    document.getElementById('cal-ren').innerHTML=cal;
+
+    // Filtro planes
+    const planes=[...new Set(rens.map(r=>r.plan).filter(Boolean))];
+    document.getElementById('fil-ren-plan').innerHTML='<option value="">Todos los planes</option>'+planes.map(p=>`<option>${p}</option>`).join('');
+    renderRenovaciones();
+  }catch(e){document.getElementById('kpi-ren').innerHTML=`<div style="color:#A32D2D;grid-column:span 5;padding:20px">Error: ${e.message}</div>`;}
+}
+
+function renderRenovaciones(){
+  const rens=window._rens||[];
+  let data=[...rens];
+  const plan=document.getElementById('fil-ren-plan')?.value||'';
+  if(plan)data=data.filter(r=>r.plan===plan);
+  if(filRen.estado)data=data.filter(r=>r.estado===filRen.estado);
+  if(filRen.frecuencia)data=data.filter(r=>r.frecuencia===filRen.frecuencia);
+  if(filRen.q)data=data.filter(r=>r.nombre_cliente.toLowerCase().includes(filRen.q.toLowerCase()));
+
+  const estadoTag=e=>{
+    if(e==='renovado') return '<span class="tag tag-verde">Pagado</span>';
+    if(e==='vencido')  return '<span class="tag tag-rojo" style="font-weight:700">⚠️ VENCIDO</span>';
+    if(e==='postergado') return '<span class="tag tag-naranja">Postergado</span>';
+    return '<span class="tag tag-amarillo">Pendiente</span>';
+  };
+  const diasTag=d=>{
+    if(d<0) return `<span class="tag tag-rojo">⚠️ ${Math.abs(Math.round(d))}d atrás</span>`;
+    if(d<=2) return `<span class="tag tag-rojo">🔴 ${Math.round(d)}d</span>`;
+    if(d<=7) return `<span class="tag tag-amarillo">🟡 ${Math.round(d)}d</span>`;
+    return `<span class="tag tag-verde">🟢 ${Math.round(d)}d</span>`;
+  };
+
+  document.getElementById('tbody-ren').innerHTML=data.map(r=>{
+    const esVencido=r.estado==='vencido';
+    const acciones=r.estado==='renovado'?'<span style="font-size:11px;color:#aaa">✓ Pagado</span>':`
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#EAF3DE;color:#3B6D11;border:none" onclick="pagarRenovacion('${r.id}')">✓ Pagado</button>
+        <button class="btn btn-sm btn-outline" onclick="marcarVencido('${r.id}')">⚠️ Vencido</button>
+        <button class="btn btn-sm btn-outline" onclick="abrirPostergar('${r.id}')">📅 Postergar</button>
+      </div>`;
+    return `<tr style="${esVencido?'background:#fff5f5;':''}">
+      <td><strong>${r.nombre_cliente}</strong>${esVencido?'<br><span style="font-size:10px;color:#E24B4A;font-weight:600">⚠️ PAGO VENCIDO</span>':''}</td>
+      <td><span class="tag tag-blue">${r.plan||'-'}</span></td>
+      <td><span class="tag ${r.frecuencia==='semanal'?'tag-morado':'tag-blue'}">${r.frecuencia||'mensual'}</span></td>
+      <td style="font-size:11px">${r.fecha_vencimiento||'-'}</td>
+      <td>${diasTag(r.dias)}</td>
+      <td>${estadoTag(r.estado)}</td>
+      <td>$${fmt(r.monto||0)}</td>
+      <td>${acciones}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── METAS ──
+async function cargarMetas(){
+  try{
+    const metas=await fetch(`${API}/metas`).then(r=>r.json());
+    metasData=Array.isArray(metas)?metas:[];
+    const mesAct=mesActual();
+    const metaMes=metasData.find(m=>m.mes===mesAct)||{};
+    document.getElementById('meta-mes-titulo').textContent=`Mes actual — ${mesAct}`;
+    // Activos
+    const clActivos=clis.filter(c=>c.estado!=='perdido').length;
+    document.getElementById('meta-mes-content').innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
+        <div class="kpi"><div class="kpi-label">Clientes activos</div><div class="kpi-valor">${clActivos}</div><div class="kpi-sub info">Total cartera</div></div>
+        <div class="kpi"><div class="kpi-label">Meta renovaciones</div><div class="kpi-valor">${metaMes.meta_renovaciones||'-'}</div><div class="kpi-sub warn">Objetivo mes</div></div>
+        <div class="kpi"><div class="kpi-label">Renovados</div><div class="kpi-valor">${metaMes.real_renovaciones||0}</div><div class="kpi-sub ok">Real este mes</div></div>
+        <div class="kpi"><div class="kpi-label">Meta clientes nuevos</div><div class="kpi-valor">${metaMes.meta_nuevos||'-'}</div><div class="kpi-sub warn">Objetivo mes</div></div>
+        <div class="kpi"><div class="kpi-label">Clientes nuevos</div><div class="kpi-valor">${metaMes.real_nuevos||0}</div><div class="kpi-sub ok">Real este mes</div></div>
+      </div>
+      ${progresoHTML('Clientes renovados',metaMes.real_renovaciones||0,metaMes.meta_renovaciones||0,metaMes.rec_renovaciones||0)}
+      ${progresoHTML('Clientes nuevos',metaMes.real_nuevos||0,metaMes.meta_nuevos||0,metaMes.rec_nuevos||0)}
+    `;
+    const hist=metasData.filter(m=>m.mes!==mesAct);
+    document.getElementById('meta-historico').innerHTML=hist.map(m=>{
+      const p1=m.meta_renovaciones>0?Math.min(Math.round((m.real_renovaciones||0)/m.meta_renovaciones*100),100):0;
+      const p2=m.meta_nuevos>0?Math.min(Math.round((m.real_nuevos||0)/m.meta_nuevos*100),100):0;
+      const col=p=>p>=100?'#4CAF50':p>=70?'#FFC107':'#F44336';
+      return `<div class="meta-hist-card">
+        <div class="meta-hist-titulo">${m.mes}</div>
+        ${mhRow('Renovados',m.real_renovaciones||0,m.meta_renovaciones,p1,col(p1))}
+        ${mhRow('Nuevos',m.real_nuevos||0,m.meta_nuevos,p2,col(p2))}
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('meta-mes-content').innerHTML=`<div style="color:#A32D2D">Error: ${e.message}</div>`;}
+}
+
+function abrirModalMetaNueva(){
+  document.getElementById('meta-nuevos').value='';
+  document.getElementById('meta-ren').value='';
+  abrirModal('modal-meta-nueva');
+}
+
+async function guardarMetaNueva(){
+  const mes=document.getElementById('meta-mes-sel').value+'-'+document.getElementById('meta-anio-sel').value;
+  if(!mes){toast('Ingresa el mes','error');return;}
+  try{
+    const res=await fetch(`${API}/metas`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      mes,
+      meta_nuevos:parseInt(document.getElementById('meta-nuevos').value)||0,
+      meta_renovaciones:parseInt(document.getElementById('meta-ren').value)||0,
+    })});
+    const data=await res.json();
+    if(!data.ok){toast('Ya existe una meta para ese mes','error');return;}
+    cerrarModal('modal-meta-nueva');toast('Meta guardada ✓');cargarMetas();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+function abrirModalReal(){
+  const mesAct=mesActual();
+  const m=metasData.find(x=>x.mes===mesAct)||{};
+  document.getElementById('modal-real-titulo').textContent=`Real — ${mesAct}`;
+  document.getElementById('real-nuevos').value=m.real_nuevos||'';
+  document.getElementById('real-ren').value=m.real_renovaciones||'';
+  abrirModal('modal-meta-real');
+}
+
+async function guardarReal(){
+  const mesAct=mesActual();
+  try{
+    await fetch(`${API}/metas`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      mes:mesAct,
+      modo:'real',
+      real_nuevos:parseInt(document.getElementById('real-nuevos').value)||0,
+      real_renovaciones:parseInt(document.getElementById('real-ren').value)||0,
+    })});
+    cerrarModal('modal-meta-real');toast('Real actualizado ✓');cargarMetas();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+function mhRow(lbl,real,meta,pct,color){return `<div class="mh-row"><div class="mh-label">${lbl}</div><div class="mh-bars"><div class="mh-bar-bg"><div class="mh-bar-fill" style="width:${pct}%;background:${color}"></div></div><div class="mh-nums"><span>${real} real</span><span>meta ${meta}</span></div></div><div class="mh-pct" style="color:${color}">${pct}%</div></div>`;}
+function progresoHTML(lbl,real,meta,rec){
+  const pct=meta>0?Math.round(real/meta*100):0;
+  const col=pct>=100?'#4CAF50':pct>=70?'#FFC107':'#F44336';
+  const hoy=new Date();
+  const ultimoDia=new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
+  const diasRestantes=ultimoDia-hoy.getDate();
+  const faltan=Math.max(meta-real,0);
+  const porDia=diasRestantes>0?Math.ceil(faltan/diasRestantes):faltan;
+  const ritmoTxt=faltan>0&&diasRestantes>0?` · ${diasRestantes}d restantes · <strong>${porDia}/día</strong> para cumplir`:'';
+  return `<div class="progreso-item"><div class="progreso-label"><span>${lbl}</span><span>${real} / <strong>${meta}</strong> meta · <span style="color:#aaa">Rec: ${rec}</span></span></div><div class="progreso-bg"><div class="progreso-fill" style="width:${pct}%;background:${col}"></div></div><div class="progreso-sub">${pct}% cumplido · ${pct>=100?'✅ Meta cumplida':'Faltan '+faltan+ritmoTxt}</div></div>`;
+}
+
+function mesFechaStr(f){if(!f)return null;const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];try{const p=f.split('-');return p.length===3?`${meses[parseInt(p[1])-1]}-${p[0].slice(2)}`:null;}catch{return null;}}
+function mesActual(){const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];const d=new Date();return `${meses[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;}
+
+
+// ── RENOVACIONES ──
+async function cargarRenovaciones(){
+  try{
+    const data=await fetch(`${API}/renovaciones`).then(r=>r.json());
+    const rens=Array.isArray(data)?data:[];
+    const hoy=new Date();hoy.setHours(0,0,0,0);
+    // Calcular días y estado real
+    rens.forEach(r=>{
+      const fv=r.fecha_vencimiento?new Date(r.fecha_vencimiento):null;
+      if(fv){
+        fv.setHours(0,0,0,0);
+        r.dias=(fv-hoy)/86400000;
+        if(r.estado==='pendiente'&&r.dias<0) r.estado_real='atrasado';
+        else r.estado_real=r.estado;
+      }else{r.dias=99;r.estado_real=r.estado;}
+    });
+    const pendientes=rens.filter(r=>r.estado_real!=='renovado').length;
+    const atrasados=rens.filter(r=>r.estado_real==='atrasado').length;
+    const vencenHoy=rens.filter(r=>r.dias>=0&&r.dias<=1&&r.estado_real!=='renovado').length;
+    document.getElementById('badge-ren').textContent=atrasados||'';
+    document.getElementById('kpi-ren').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-valor">${pendientes}</div><div class="kpi-sub warn">Sin pagar</div></div>
+      <div class="kpi"><div class="kpi-label">Atrasados</div><div class="kpi-valor">${atrasados}</div><div class="kpi-sub ${atrasados>0?'danger':'ok'}">${atrasados>0?'Requieren atención':'Al día'}</div></div>
+      <div class="kpi"><div class="kpi-label">Vencen hoy/mañana</div><div class="kpi-valor">${vencenHoy}</div><div class="kpi-sub warn">Llamar hoy</div></div>
+      <div class="kpi"><div class="kpi-label">Pagados este mes</div><div class="kpi-valor">${rens.filter(r=>r.estado==='renovado').length}</div><div class="kpi-sub ok">Renovados</div></div>
+    `;
+    window._rens=rens;
+    renderRenovaciones();
+  }catch(e){document.getElementById('kpi-ren').innerHTML=`<div style="color:#A32D2D;grid-column:span 4;padding:20px">Error: ${e.message}</div>`;}
+}
+
+function renderRenovaciones(){
+  const rens=window._rens||[];
+  let data=[...rens];
+  if(filRen.estado) data=data.filter(r=>r.estado_real===filRen.estado);
+  if(filRen.frecuencia) data=data.filter(r=>r.frecuencia===filRen.frecuencia);
+  if(filRen.q) data=data.filter(r=>r.nombre_cliente.toLowerCase().includes(filRen.q.toLowerCase()));
+  data.sort((a,b)=>a.dias-b.dias);
+
+  const estadoTag=e=>{
+    if(e==='renovado') return '<span class="tag tag-verde">Pagado</span>';
+    if(e==='atrasado') return '<span class="tag tag-rojo">Atrasado</span>';
+    if(e==='postergado') return '<span class="tag tag-naranja">Postergado</span>';
+    return '<span class="tag tag-amarillo">Pendiente</span>';
+  };
+  const diasTag=d=>{
+    if(d<0) return `<span class="tag tag-rojo">⚠️ ${Math.abs(Math.round(d))}d atrás</span>`;
+    if(d<=2) return `<span class="tag tag-rojo">🔴 ${Math.round(d)}d</span>`;
+    if(d<=5) return `<span class="tag tag-amarillo">🟡 ${Math.round(d)}d</span>`;
+    return `<span class="tag tag-verde">🟢 ${Math.round(d)}d</span>`;
+  };
+
+  document.getElementById('tbody-ren').innerHTML=data.map(r=>{
+    const acciones=r.estado==='renovado'?'<span style="font-size:11px;color:#aaa">Pagado</span>':`
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#EAF3DE;color:#3B6D11;border:none" onclick="pagarRenovacion('${r.id}')">✓ Pagado</button>
+        <button class="btn btn-sm btn-outline" onclick="marcarAtrasado('${r.id}')">⚠️ Atrasado</button>
+        <button class="btn btn-sm btn-outline" onclick="abrirPostergar('${r.id}')">📅 Postergar</button>
+      </div>`;
+    return `<tr>
+      <td><strong>${r.nombre_cliente}</strong></td>
+      <td><span class="tag tag-blue">${r.plan||'-'}</span></td>
+      <td><span class="tag ${r.frecuencia==='semanal'?'tag-morado':'tag-blue'}">${r.frecuencia||'mensual'}</span></td>
+      <td style="font-size:11px">${r.fecha_vencimiento||'-'}</td>
+      <td>${diasTag(r.dias)}</td>
+      <td>${estadoTag(r.estado_real)}</td>
+      <td>$${fmt(r.monto||0)}</td>
+      <td>${acciones}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function pagarRenovacion(rid){
+  if(!confirm('¿Confirmas el pago de esta renovación?'))return;
+  try{
+    const res=await fetch(`${API}/renovaciones/${rid}/pagar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fecha_pago:new Date().toISOString().split('T')[0]})});
+    const data=await res.json();
+    toast(`✓ Pagado. Próximo vencimiento: ${data.siguiente_fecha||''}`);
+    cargarRenovaciones();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function marcarVencido(rid){
+  try{
+    await fetch(`${API}/renovaciones/${rid}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({estado:'vencido'})});
+    toast('Marcado como vencido');cargarRenovaciones();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+function abrirPostergar(rid){
+  renPostergando=rid;
+  document.getElementById('fecha-postergacion').value='';
+  abrirModal('modal-postergar');
+}
+
+async function confirmarPostergacion(){
+  if(!renPostergando)return;
+  const fecha=document.getElementById('fecha-postergacion').value;
+  if(!fecha){toast('Selecciona una fecha','error');return;}
+  try{
+    await fetch(`${API}/renovaciones/${renPostergando}/postergar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fecha_postergacion:fecha})});
+    cerrarModal('modal-postergar');renPostergando=null;
+    toast('Postergado ✓');cargarRenovaciones();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+
+async function cambiarEstadoCliente(id,estado){
+  try{
+    const data={estado};
+    if(estado==='perdido') data.fecha_perdido=hoy();
+    await fetch(`${API}/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    toast('Estado actualizado ✓');
+    cargarClientes();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+// ── GOOGLE ADS ──
+let periodoAds='mes';
+let gadsData=[];
+
+function setPeriodoAds(periodo,btn){
+  periodoAds=periodo;
+  document.querySelectorAll('#page-googleads .btn').forEach(b=>{b.className='btn btn-outline';});
+  btn.className='btn btn-primary';
+  cargarGoogleAds();
+}
+
+async function cargarGoogleAds(){
+  document.getElementById('kpi-gads').innerHTML='<div class="loading" style="grid-column:span 5"><div class="spinner"></div> Cargando datos de Google Ads...</div>';
+  document.getElementById('tbody-gads').innerHTML='<tr><td colspan="11" class="loading"><div class="spinner"></div> Cargando...</td></tr>';
+  try{
+    const data=await fetch(`${API}/googleads?periodo=${periodoAds}`).then(r=>r.json());
+    if(data.error) throw new Error(data.error);
+    gadsData=Array.isArray(data)?data:[];
+   // Poblar filtro plan
+    const planesGads=[...new Set(gadsData.map(c=>c.plan).filter(Boolean))];
+    const selPlanGads=document.getElementById('fil-gads-plan');
+    selPlanGads.innerHTML='<option value="">Todos los planes</option>'+planesGads.map(p=>`<option>${p}</option>`).join('');
+
+    // KPIs excluyen Administración
+    const sinAdmin=gadsData.filter(c=>c.plan!=='Administración');
+    const totalCosto=sinAdmin.reduce((s,c)=>s+(c.costo_ads||0),0);
+    const totalImp=sinAdmin.reduce((s,c)=>s+(c.impresiones||0),0);
+    const totalClics=sinAdmin.reduce((s,c)=>s+(c.clics||0),0);
+    const totalRent=gadsData.reduce((s,c)=>s+(c.rentabilidad||0),0);
+    const cpcProm=totalClics>0?Math.round(totalCosto/totalClics):0;
+    document.getElementById('kpi-gads').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Costo total Ads</div><div class="kpi-valor" style="font-size:18px">$${fmt(totalCosto)}</div><div class="kpi-sub danger">Inversión</div></div>
+      <div class="kpi"><div class="kpi-label">Impresiones</div><div class="kpi-valor">${fmt(totalImp)}</div><div class="kpi-sub info">Total</div></div>
+      <div class="kpi"><div class="kpi-label">Clics</div><div class="kpi-valor">${fmt(totalClics)}</div><div class="kpi-sub info">Total</div></div>
+      <div class="kpi"><div class="kpi-label">CPC promedio</div><div class="kpi-valor">$${fmt(cpcProm)}</div><div class="kpi-sub warn">Por clic</div></div>
+      <div class="kpi"><div class="kpi-label">Rentabilidad total</div><div class="kpi-valor" style="font-size:18px">$${fmt(totalRent)}</div><div class="kpi-sub ok">Ganancia</div></div>
+    `;
+    renderGadsTabla();
+  }catch(e){
+    document.getElementById('kpi-gads').innerHTML=`<div style="color:#A32D2D;grid-column:span 5;padding:20px">Error: ${e.message}</div>`;
+  }
+}
+
+function renderGadsTabla(){
+  const plan=document.getElementById('fil-gads-plan')?.value||'';
+  const data=plan?gadsData.filter(c=>c.plan===plan):gadsData;
+  const sinAdminFil=data.filter(c=>c.plan!=='Administración');
+  const totalCostoFil=sinAdminFil.reduce((s,c)=>s+(c.costo_ads||0),0);
+  const totalImpFil=sinAdminFil.reduce((s,c)=>s+(c.impresiones||0),0);
+  const totalClicsFil=sinAdminFil.reduce((s,c)=>s+(c.clics||0),0);
+  const totalRentFil=data.reduce((s,c)=>s+(c.rentabilidad||0),0);
+  const cpcPromFil=totalClicsFil>0?Math.round(totalCostoFil/totalClicsFil):0;
+  document.getElementById('kpi-gads').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Costo total Ads</div><div class="kpi-valor" style="font-size:18px">${fmt(totalCostoFil)}</div><div class="kpi-sub danger">Inversión</div></div>
+    <div class="kpi"><div class="kpi-label">Impresiones</div><div class="kpi-valor">${fmt(totalImpFil)}</div><div class="kpi-sub info">Total</div></div>
+    <div class="kpi"><div class="kpi-label">Clics</div><div class="kpi-valor">${fmt(totalClicsFil)}</div><div class="kpi-sub info">Total</div></div>
+    <div class="kpi"><div class="kpi-label">CPC promedio</div><div class="kpi-valor">${fmt(cpcPromFil)}</div><div class="kpi-sub warn">Por clic</div></div>
+    <div class="kpi"><div class="kpi-label">Rentabilidad total</div><div class="kpi-valor" style="font-size:18px">${fmt(totalRentFil)}</div><div class="kpi-sub ok">Ganancia</div></div>
+  `;
+  document.getElementById('tbody-gads').innerHTML=data.map(c=>`<tr>
+    <td><strong>${c.nombre}</strong>${c.error?'<br><span style="font-size:10px;color:#E24B4A">Sin datos Ads</span>':''}</td>
+    <td><span class="tag tag-blue">${c.plan}</span></td>
+    <td>${fmt(c.monto)}</td>
+    <td>${fmt(c.inversion_ads)}</td>
+    <td class="ok">${fmt(c.rentabilidad)}</td>
+    <td style="font-size:11px;color:#888">${c.google_ads_id}</td>
+    <td>${fmt(c.costo_ads)}</td>
+    <td style="${c.alerta_inv?'color:#A32D2D;font-weight:600':''}">${fmt(c.costo_30d||0)} ${c.alerta_inv?'⚠️':''}</td>
+    <td>${fmt(c.impresiones)}</td>
+    <td>${fmt(c.clics)}</td>
+    <td>${fmt(c.cpc)}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="verDetalleGads('${c.id}','${c.google_ads_id}','${c.nombre}')">Ver</button></td>
+  </tr>`).join('');
+}
+                        
+async function verDetalleGads(cid,gadsId,nombre){
+  document.getElementById('gads-lista').style.display='none';
+  document.getElementById('gads-detalle').style.display='block';
+  document.getElementById('gads-det-nombre').textContent=nombre;
+  document.getElementById('gads-det-sub').textContent='Google Ads ID: '+gadsId+' · '+periodoAds;
+  document.getElementById('kpi-gads-det').innerHTML='<div class="loading" style="grid-column:span 5"><div class="spinner"></div> Cargando...</div>';
+  document.getElementById('tbody-gads-det').innerHTML='';
+  try{
+    const data=await fetch(`${API}/googleads/${gadsId}?periodo=${periodoAds}`).then(r=>r.json());
+    if(data.error) throw new Error(data.error);
+    const rows=Array.isArray(data)?data:[];
+    const totImp=rows.reduce((s,r)=>s+(r.impresiones||0),0);
+    const totClics=rows.reduce((s,r)=>s+(r.clics||0),0);
+    const totCosto=rows.reduce((s,r)=>s+(r.costo||0),0);
+    const totConv=rows.reduce((s,r)=>s+(r.conversiones||0),0);
+    const ctrProm=totImp>0?Math.round(totClics/totImp*10000)/100:0;
+    const cpcProm=totClics>0?Math.round(totCosto/totClics):0;
+    document.getElementById('kpi-gads-det').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Impresiones</div><div class="kpi-valor">${fmt(totImp)}</div></div>
+      <div class="kpi"><div class="kpi-label">Clics</div><div class="kpi-valor">${fmt(totClics)}</div></div>
+      <div class="kpi"><div class="kpi-label">CTR</div><div class="kpi-valor">${ctrProm}%</div></div>
+      <div class="kpi"><div class="kpi-label">CPC promedio</div><div class="kpi-valor">$${fmt(cpcProm)}</div></div>
+      <div class="kpi"><div class="kpi-label">Costo total</div><div class="kpi-valor" style="font-size:18px">$${fmt(totCosto)}</div></div>
+    `;
+    // Estructura campaña
+    fetch(`${API}/googleads/${gadsId}/estructura?periodo=${periodoAds}`)
+      .then(r=>r.json())
+      .then(e=>{
+        if(!e.error){
+          document.getElementById('kpi-gads-det').innerHTML+=`
+            <div class="kpi"><div class="kpi-label">Palabras clave</div><div class="kpi-valor">${e.keywords}</div><div class="kpi-sub info">Activas</div></div>
+            <div class="kpi"><div class="kpi-label">Grupos de anuncios</div><div class="kpi-valor">${e.grupos}</div><div class="kpi-sub info">Activos</div></div>
+            <div class="kpi"><div class="kpi-label">Anuncios</div><div class="kpi-valor">${e.anuncios}</div><div class="kpi-sub info">Activos</div></div>
+          `;
+          document.getElementById('kpi-gads-det').style.gridTemplateColumns='repeat(8,1fr)';
+        }
+      });
+    document.getElementById('tbody-gads-det').innerHTML=rows.map(r=>`<tr>
+      <td>${r.fecha}</td>
+      <td>${r.campana}</td>
+      <td>${fmt(r.impresiones)}</td>
+      <td>${fmt(r.clics)}</td>
+      <td>${r.ctr}%</td>
+      <td>$${fmt(r.cpc)}</td>
+      <td>$${fmt(r.costo)}</td>
+    </tr>`).join('');
+  }catch(e){
+    document.getElementById('kpi-gads-det').innerHTML=`<div style="color:#A32D2D;grid-column:span 5;padding:20px">Error: ${e.message}</div>`;
+  }
+}
+
+function volverListaGads(){
+  document.getElementById('gads-lista').style.display='block';
+  document.getElementById('gads-detalle').style.display='none';
+}
+
+// ── CALENDARIO ──
+let calFechaBase = new Date();
+
+function irHoy(){ calFechaBase=new Date(); renderCalendario(); }
+function cambiarSemana(dir){ calFechaBase=new Date(calFechaBase); calFechaBase.setMonth(calFechaBase.getMonth()+dir); renderCalendario(); }
+
+async function cargarCalendario(){
+  if(!leads.length){
+    const ld=await fetch(`${API}/leads`).then(r=>r.json());
+    leads=Array.isArray(ld)?ld:[];
+  }
+  renderCalendario();
+}
+
+function renderCalendario(){
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const anio=calFechaBase.getFullYear();
+  const mes=calFechaBase.getMonth();
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  document.getElementById('cal-semana-titulo').textContent=`${meses[mes]} ${anio}`;
+  const primerDia=new Date(anio,mes,1).getDay();
+  const totalDias=new Date(anio,mes+1,0).getDate();
+  const grid=document.getElementById('cal-grid');
+  grid.style.gridTemplateColumns='repeat(7,1fr)';
+  grid.innerHTML='';
+  // Headers días
+  dias.forEach(d=>{
+    const h=document.createElement('div');
+    h.style.cssText='text-align:center;font-size:10px;font-weight:600;color:#888;padding:4px;';
+    h.textContent=d;
+    grid.appendChild(h);
+  });
+  // Celdas vacías al inicio
+  for(let i=0;i<primerDia;i++){
+    const vacio=document.createElement('div');
+    grid.appendChild(vacio);
+  }
+  // Días del mes
+  for(let d=1;d<=totalDias;d++){
+    const fecha=new Date(anio,mes,d);
+    const diaStr=fecha.toISOString().split('T')[0];
+    const esHoy=fecha.getTime()===hoy.getTime();
+    const leadsDelDia=leads.filter(l=>l.fecha_proximo_contacto===diaStr&&l.etapa!=='cerrado'&&l.etapa!=='perdido');
+    const col=document.createElement('div');
+    col.style.cssText=`background:white;border-radius:10px;border:1px solid ${esHoy?'#185FA5':'#ececec'};min-height:80px;padding:8px;`;
+    col.innerHTML=`
+      <div style="font-size:12px;font-weight:${esHoy?'700':'500'};color:${esHoy?'#185FA5':'#333'};margin-bottom:4px">${d}</div>
+      <div class="cal-drop-zone" data-fecha="${diaStr}" style="min-height:40px">
+        ${leadsDelDia.map(l=>`
+          <div class="cal-lead-card" draggable="true" data-id="${l.id}"
+            style="background:#E6F1FB;border-radius:6px;padding:4px 6px;margin-bottom:4px;font-size:10px;cursor:grab;border-left:3px solid #185FA5">
+            <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.nombre}</div>
+          </div>`).join('')}
+      </div>`;
+    grid.appendChild(col);
+  }
+  // Drag and drop
+  document.querySelectorAll('.cal-lead-card').forEach(card=>{
+    card.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('leadId',card.dataset.id);
+      card.style.opacity='0.5';
+    });
+    card.addEventListener('dragend',e=>{ card.style.opacity='1'; });
+  });
+  document.querySelectorAll('.cal-drop-zone').forEach(zone=>{
+    zone.addEventListener('dragover',e=>{ e.preventDefault(); zone.parentElement.style.background='#f0f7ff'; });
+    zone.addEventListener('dragleave',e=>{ zone.parentElement.style.background='white'; });
+    zone.addEventListener('drop',async e=>{
+      e.preventDefault(); zone.parentElement.style.background='white';
+      const lid=e.dataTransfer.getData('leadId');
+      const fecha=zone.dataset.fecha;
+      await fetch(`${API}/leads/${lid}`,{method:'PUT',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({fecha_proximo_contacto:fecha})});
+      const l=leads.find(x=>x.id===lid);
+      if(l) l.fecha_proximo_contacto=fecha;
+      renderCalendario();
+      toast('Contacto reprogramado ✓');
+    });
+  });
+}
+
+function calcularFechaVenc(){
+  const fpago=document.getElementById('ren-fpago').value;
+  const freq=document.getElementById('ren-frecuencia').value;
+  if(!fpago) return;
+  const d=new Date(fpago+'T12:00:00');
+  let sig;
+  if(freq==='semanal') sig=new Date(d.setDate(d.getDate()+7));
+  else if(freq==='quincenal') sig=new Date(d.setDate(d.getDate()+15));
+  else{ sig=new Date(d); sig.setMonth(sig.getMonth()+1); }
+  document.getElementById('ren-fvenc').value=sig.toISOString().split('T')[0];
+}                        
+                        
+
+
+// ── VENTAS ──
+let ventasData=[];
+
+async function cargarVentas(){
+  try{
+    const data=await fetch(`${API}/renovaciones`).then(r=>r.json());
+    const rens=Array.isArray(data)?data:[];
+    const cli_rows=Array.isArray(clis)&&clis.length?clis:await fetch(`${API}/clientes`).then(r=>r.json());
+    const cliDict={};
+    (Array.isArray(cli_rows)?cli_rows:[]).forEach(c=>cliDict[c.id]=c);
+    // Solo pagadas
+    const pagadas=rens.filter(r=>r.estado==='renovado');
+    // Agrupar por mes-año
+    const porMes={};
+    pagadas.forEach(r=>{
+      const key=`${r.anio||'2026'}-${r.mes}`;
+      if(!porMes[key]) porMes[key]={mes:r.mes,anio:r.anio||'2026',key,count:0,monto:0,comision:0,ads:0,factura:0,negro:0,items:[]};
+      const cli=cliDict[r.id_cliente]||{};
+      porMes[key].count++;
+      porMes[key].monto+=r.monto||0;
+      porMes[key].comision+=r.comision||0;
+      porMes[key].ads+=r.monto_ads||0;
+      if(cli.tipo_pago==='factura') porMes[key].factura+=(r.monto||0);
+      else porMes[key].negro+=(r.monto||0);
+      porMes[key].items.push({...r,cli});
+    });
+    ventasData=Object.values(porMes).sort((a,b)=>b.key.localeCompare(a.key));
+    // KPIs totales
+    const totalMonto=ventasData.reduce((s,m)=>s+m.monto,0);
+    const totalCom=ventasData.reduce((s,m)=>s+m.comision,0);
+    const totalAds=ventasData.reduce((s,m)=>s+m.ads,0);
+    const totalCount=ventasData.reduce((s,m)=>s+m.count,0);
+// Por plan
+    const porPlan={};
+    pagadas.forEach(r=>{
+      const cli=cliDict[r.id_cliente]||{};
+      const plan=cli.plan||'Sin plan';
+      if(!porPlan[plan])porPlan[plan]={count:0,monto:0};
+      porPlan[plan].count++;porPlan[plan].monto+=r.monto||0;
+    });
+    // Por tipo pago
+    const porPago={factura:{count:0,monto:0},negro:{count:0,monto:0}};
+    pagadas.forEach(r=>{
+      const cli=cliDict[r.id_cliente]||{};
+      const tp=cli.tipo_pago==='factura'?'factura':'negro';
+      porPago[tp].count++;porPago[tp].monto+=r.monto||0;
+    });
+    document.getElementById('kpi-ventas').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Total renovaciones</div><div class="kpi-valor">${totalCount}</div><div class="kpi-sub ok">Pagadas</div></div>
+      <div class="kpi"><div class="kpi-label">Monto total</div><div class="kpi-valor" style="font-size:18px">$${fmt(totalMonto)}</div><div class="kpi-sub ok">Todos los meses</div></div>
+      <div class="kpi"><div class="kpi-label">Comisión total</div><div class="kpi-valor" style="font-size:18px">$${fmt(totalCom)}</div><div class="kpi-sub info">Ganancia</div></div>
+      <div class="kpi"><div class="kpi-label">Inversión Ads</div><div class="kpi-valor" style="font-size:18px">$${fmt(totalAds)}</div><div class="kpi-sub warn">Total</div></div>
+      <div class="kpi"><div class="kpi-label">Con factura</div><div class="kpi-valor">${porPago.factura.count}</div><div class="kpi-sub info">$${fmt(porPago.factura.monto)}</div></div>
+      <div class="kpi"><div class="kpi-label">Sin factura</div><div class="kpi-valor">${porPago.negro.count}</div><div class="kpi-sub warn">$${fmt(porPago.negro.monto)}</div></div>
+      ${Object.entries(porPlan).sort((a,b)=>b[1].monto-a[1].monto).map(([plan,v])=>`
+      <div class="kpi"><div class="kpi-label">${plan}</div><div class="kpi-valor">${v.count}</div><div class="kpi-sub info">$${fmt(v.monto)}</div></div>`).join('')}
+    `;
+    // Filtro meses
+    const sel=document.getElementById('fil-ventas-mes');
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Todos los meses</option>'+ventasData.map(m=>`<option value="${m.key}">${m.mes} ${m.anio}</option>`).join('');
+    if(cur) sel.value=cur;
+    renderVentas();
+  }catch(e){console.error('Error ventas:',e);}
+}
+
+function renderVentas(){
+  const fil=document.getElementById('fil-ventas-mes')?.value||'';
+  const data=fil?ventasData.filter(m=>m.key===fil):ventasData;
+  document.getElementById('tbody-ventas').innerHTML=data.map(m=>`<tr style="cursor:pointer" onclick="verDetalleVentas('${m.key}')">
+    <td><strong>${m.mes} ${m.anio}</strong></td>
+    <td><span class="tag tag-verde">${m.count}</span></td>
+    <td>$${fmt(m.monto)}</td>
+    <td class="ok">$${fmt(m.comision)}</td>
+    <td>$${fmt(m.ads)}</td>
+    <td>$${fmt(m.factura)}</td>
+    <td>$${fmt(m.negro)}</td>
+  </tr>`).join('');
+}
+
+function verDetalleVentas(key){
+  const m=ventasData.find(x=>x.key===key);
+  if(!m) return;
+  document.getElementById('ventas-det-titulo').textContent=`Detalle — ${m.mes} ${m.anio}`;
+  document.getElementById('card-ventas-detalle').style.display='block';
+  document.getElementById('tbody-ventas-det').innerHTML=m.items.map(r=>`<tr>
+    <td><strong>${r.nombre_cliente}</strong></td>
+    <td><span class="tag tag-blue">${r.cli.plan||'-'}</span></td>
+    <td><span class="tag ${r.cli.tipo_pago==='factura'?'tag-verde':'tag-gris'}">${r.cli.tipo_pago==='factura'?'Factura':'Sin factura'}</span></td>
+    <td>$${fmt(r.monto||0)}</td>
+    <td class="ok">$${fmt(r.comision||0)}</td>
+    <td>$${fmt(r.monto_ads||0)}</td>
+    <td>${r.factura||'-'}</td>
+    <td>${r.banco||'-'}</td>
+  </tr>`).join('');
+  document.getElementById('card-ventas-detalle').scrollIntoView({behavior:'smooth'});
+}
+
+
+// ── CALENDARIO RENOVACIONES ──
+let calRenBase=new Date();
+let filCalRen='';
+let calRenData=[];
+
+function cambiarMesRen(dir){ calRenBase=new Date(calRenBase); calRenBase.setMonth(calRenBase.getMonth()+dir); renderCalRen(); }
+
+async function cargarCalRenovaciones(){
+  try{
+    const data=await fetch(`${API}/renovaciones`).then(r=>r.json());
+    calRenData=Array.isArray(data)?data:[];
+    renderCalRen();
+  }catch(e){console.error('Error cal renovaciones:',e);}
+}
+
+function renderCalRen(){
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const anio=calRenBase.getFullYear();
+  const mes=calRenBase.getMonth();
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const diasNombre=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const primerDia=new Date(anio,mes,1).getDay();
+  const totalDias=new Date(anio,mes+1,0).getDate();
+    document.getElementById('cal-ren-titulo').textContent=`${meses[mes]} ${anio}`;
+ // Calcular monto por semana del mes con rango de fechas
+  const mesesCorto=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const semanas=[];
+  let diaActual=1;
+  while(diaActual<=totalDias){
+    const diaFin=Math.min(diaActual+6,totalDias);
+    const fechaIni=new Date(anio,mes,diaActual);
+    const fechaFin=new Date(anio,mes,diaFin);
+    const iniStr=fechaIni.toISOString().split('T')[0];
+    const finStr=fechaFin.toISOString().split('T')[0];
+    const rensDelRango=calRenData.filter(r=>{
+      const fv=r.fecha_reprogramacion||r.fecha_vencimiento;
+      return fv&&fv>=iniStr&&fv<=finStr&&['pendiente','atrasado','reprogramado'].includes(r.estado);
+    });
+    semanas.push({
+      label:`${diaActual} ${mesesCorto[mes]} - ${diaFin} ${mesesCorto[mes]}`,
+      monto:rensDelRango.reduce((s,r)=>s+(r.monto||0),0),
+      count:rensDelRango.length
+    });
+    diaActual+=7;
+  }
+  const semResumen=semanas.filter(s=>s.count>0).map(s=>`
+    <div style="background:white;border-radius:8px;border:1px solid #ececec;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:16px">
+      <span style="font-size:12px;font-weight:600;color:#555;white-space:nowrap">${s.label}</span>
+      <span style="font-size:12px;color:#888">${s.count} cliente${s.count!==1?'s':''}</span>
+      <span style="font-size:14px;font-weight:700;color:#185FA5;white-space:nowrap">$${fmt(s.monto)}</span>
+    </div>`).join('');
+  document.getElementById('cal-ren-semanas').innerHTML=semResumen||'<div style="font-size:12px;color:#aaa;padding:10px">Sin vencimientos este mes</div>';
+  
+  const grid=document.getElementById('cal-ren-grid');
+  grid.innerHTML='';
+  // Headers
+  diasNombre.forEach(d=>{
+    const h=document.createElement('div');
+    h.style.cssText='text-align:center;font-size:10px;font-weight:600;color:#888;padding:4px;';
+    h.textContent=d; grid.appendChild(h);
+  });
+  // Celdas vacías
+  for(let i=0;i<primerDia;i++){
+    grid.appendChild(document.createElement('div'));
+  }
+  // Días
+  for(let d=1;d<=totalDias;d++){
+    const fecha=new Date(anio,mes,d);
+    const diaStr=fecha.toISOString().split('T')[0];
+    const esHoy=fecha.getTime()===hoy.getTime();
+    // Renovaciones que vencen este día (usar fecha_reprogramacion si existe, sino fecha_vencimiento)
+    const rensDelDia=calRenData.filter(r=>{
+        const fv=r.fecha_reprogramacion||r.fecha_vencimiento;
+        return fv===diaStr&&['pendiente','atrasado','reprogramado'].includes(r.estado);
+      });
+    if(filCalRen) rensDelDia=rensDelDia.filter(r=>r.estado===filCalRen);
+    const col=document.createElement('div');
+    col.style.cssText=`background:white;border-radius:8px;border:1px solid ${esHoy?'#185FA5':'#ececec'};min-height:70px;padding:6px;`;
+    const colorEstado=e=>({renovado:'#3B6D11',vencido:'#A32D2D',postergado:'#C45000',reprogramado:'#4527A0'}[e]||'#185FA5');
+    col.innerHTML=`
+      <div style="font-size:11px;font-weight:${esHoy?'700':'500'};color:${esHoy?'#185FA5':'#333'};margin-bottom:3px">${d}</div>
+      <div class="cal-ren-drop" data-fecha="${diaStr}" style="min-height:30px">
+        ${rensDelDia.map(r=>`
+          <div class="cal-ren-card" draggable="true" data-id="${r.id}"
+            style="background:${colorEstado(r.estado)}15;border-left:3px solid ${colorEstado(r.estado)};border-radius:4px;padding:3px 5px;margin-bottom:3px;font-size:10px;cursor:grab"
+            onclick="irDetalle('${r.id_cliente}')">
+            <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${colorEstado(r.estado)}">${r.nombre_cliente}</div>
+            <div style="color:#888">$${fmt(r.monto||0)}</div>
+          </div>`).join('')}
+      </div>`;
+    grid.appendChild(col);
+  }
+  // Drag and drop
+  document.querySelectorAll('.cal-ren-card').forEach(card=>{
+    card.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('renId',card.dataset.id);
+      card.style.opacity='0.5';
+    });
+    card.addEventListener('dragend',e=>{ card.style.opacity='1'; });
+  });
+  document.querySelectorAll('.cal-ren-drop').forEach(zone=>{
+    zone.addEventListener('dragover',e=>{ e.preventDefault(); zone.parentElement.style.background='#f0f7ff'; });
+    zone.addEventListener('dragleave',e=>{ zone.parentElement.style.background='white'; });
+    zone.addEventListener('drop',async e=>{
+      e.preventDefault(); zone.parentElement.style.background='white';
+      const rid=e.dataTransfer.getData('renId');
+      const fecha=zone.dataset.fecha;
+      await fetch(`${API}/renovaciones/${rid}/reprogramar`,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({fecha_reprogramacion:fecha})});
+      const r=calRenData.find(x=>x.id===rid);
+      if(r){r.fecha_reprogramacion=fecha;r.estado='reprogramado';}
+      renderCalRen();
+      toast('Reprogramado ✓');
+    });
+  });
+}
+
+// ── CONFIG ──
+async function cargarConfig(){
+  try{
+    const data=await fetch(`${API}/config`).then(r=>r.json());
+    if(data.planes) cfg.planes=data.planes;
+    if(data.fuentes) cfg.fuentes=data.fuentes;
+    if(data.pagos) cfg.pagos=data.pagos;
+    if(data.estados) cfg.estados=data.estados;
+    if(data.etapas) cfg.etapas=data.etapas;
+    if(data.motivos) cfg.motivos=data.motivos;
+    if(data.bancos) cfg.bancos=data.bancos;
+  }catch(e){console.error('Error cargando config:',e);}
+  sincSelects();
+  cargarClientes();
+}
+
+function renderConfig(){
+  Object.keys(cfg).forEach(key=>{
+    const el=document.getElementById('cfg-'+key);
+    if(el)el.innerHTML=cfg[key].map(v=>`<div class="cfg-tag"><span>${v}</span><button onclick="removeCfg('${key}','${v}')">×</button></div>`).join('');
+  });
+}
+
+async function addCfg(key,inpId,elId){
+  const v=document.getElementById(inpId).value.trim();
+  if(!v||cfg[key].includes(v))return;
+  try{
+    await fetch(`${API}/config`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({categoria:key,valor:v})});
+    cfg[key].push(v);
+    document.getElementById(inpId).value='';
+    renderConfig();sincSelects();
+    toast('Guardado ✓');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function removeCfg(key,val){
+  try{
+    await fetch(`${API}/config`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({categoria:key,valor:val})});
+    cfg[key]=cfg[key].filter(v=>v!==val);
+    renderConfig();sincSelects();
+    toast('Eliminado ✓');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+// ── INDICADORES ──
+async function cargarIndicadores(){
+  try{
+    const [leadsData, cliData] = await Promise.all([
+      fetch(`${API}/leads`).then(r=>r.json()),
+      fetch(`${API}/clientes`).then(r=>r.json()),
+    ]);
+    const leadsArr = Array.isArray(leadsData)?leadsData:[];
+    const cliArr   = Array.isArray(cliData)?cliData:[];
+    leads = leadsArr;
+    clis = cliArr;
+    const mesAct = mesActual();
+    const cont={nuevo:0,contactado:0,negociacion:0,'no contesta':0,cerrado:0,perdido:0};
+    const montos={nuevo:0,contactado:0,negociacion:0,'no contesta':0,cerrado:0,perdido:0};
+    leadsArr.forEach(l=>{
+      if(cont[l.etapa]!==undefined){
+        cont[l.etapa]++;
+        montos[l.etapa]+=(l.monto_estimado||0);
+      }
+    });
+    const montoTotal=Object.entries(montos).filter(([k])=>!['cerrado','perdido'].includes(k)).reduce((s,[,v])=>s+v,0);
+    const totalAct=Object.entries(cont).filter(([k])=>!['cerrado','perdido'].includes(k)).reduce((s,[,v])=>s+v,0);
+    const noContLeads=cont['no contesta'];
+    const tasaAct=leadsArr.length>0?Math.round(cont.cerrado/leadsArr.length*100):0;
+    document.getElementById('ind-leads-mes').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Total leads</div><div class="kpi-valor">${totalAct}</div><div class="kpi-sub info">$${fmt(montoTotal)}</div></div>
+      <div class="kpi"><div class="kpi-label">No contesta</div><div class="kpi-valor">${noContLeads}</div><div class="kpi-sub warn">$${fmt(montos['no contesta'])}</div></div>
+      <div class="kpi"><div class="kpi-label">Nuevos</div><div class="kpi-valor">${cont.nuevo}</div><div class="kpi-sub warn">$${fmt(montos.nuevo)}</div></div>
+      <div class="kpi"><div class="kpi-label">Contactados</div><div class="kpi-valor">${cont.contactado}</div><div class="kpi-sub info">$${fmt(montos.contactado)}</div></div>
+      <div class="kpi"><div class="kpi-label">Negociación</div><div class="kpi-valor">${cont.negociacion}</div><div class="kpi-sub info">$${fmt(montos.negociacion)}</div></div>
+      <div class="kpi"><div class="kpi-label">Vendidos</div><div class="kpi-valor">${cont.cerrado}</div><div class="kpi-sub ok">$${fmt(montos.cerrado)}</div></div>
+      <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${cont.perdido}</div><div class="kpi-sub danger">$${fmt(montos.perdido)}</div></div>
+      <div class="kpi"><div class="kpi-label">Tasa cierre</div><div class="kpi-valor">${tasaAct}%</div><div class="kpi-sub ${tasaAct>=20?'ok':'warn'}">Del total</div></div>
+    `;
+    const meses6 = ultimosMeses(6);
+    const selMes = document.getElementById('fil-ind-mes');
+    selMes.innerHTML='<option value="">Todos los meses</option>'+meses6.map(m=>`<option value="${m}">${m}</option>`).join('');
+    window._indLeads = leadsArr;
+    window._indMeses6 = meses6;
+    renderIndLeadsMes();
+    const activos   = cliArr.filter(c=>c.estado!=='perdido');
+    const perdidos  = cliArr.filter(c=>c.estado==='perdido');
+    const noContesta= activos.filter(c=>c.estado==='no contesta');
+    const postergan = activos.filter(c=>c.estado==='postergado');
+    const otro      = activos.filter(c=>!['activo','no contesta','postergado'].includes(c.estado));
+const montoActivos=activos.reduce((s,c)=>s+(c.monto||0),0);
+    const invActivos=activos.reduce((s,c)=>s+(c.inversion_ads||0),0);
+    const rentActivos=activos.reduce((s,c)=>s+(c.rentabilidad||0),0);
+    const montoNC=noContesta.reduce((s,c)=>s+(c.monto||0),0);
+    const invNC=noContesta.reduce((s,c)=>s+(c.inversion_ads||0),0);
+    const rentNC=noContesta.reduce((s,c)=>s+(c.rentabilidad||0),0);
+    const montoPost=postergan.reduce((s,c)=>s+(c.monto||0),0);
+    const invPost=postergan.reduce((s,c)=>s+(c.inversion_ads||0),0);
+    const rentPost=postergan.reduce((s,c)=>s+(c.rentabilidad||0),0);
+    const montoOtro=otro.reduce((s,c)=>s+(c.monto||0),0);
+    const invOtro=otro.reduce((s,c)=>s+(c.inversion_ads||0),0);
+    const rentOtro=otro.reduce((s,c)=>s+(c.rentabilidad||0),0);
+    const montoPerd=perdidos.reduce((s,c)=>s+(c.monto||0),0);
+    const invPerd=perdidos.reduce((s,c)=>s+(c.inversion_ads||0),0);
+    const rentPerd=perdidos.reduce((s,c)=>s+(c.rentabilidad||0),0);
+    document.getElementById('ind-cli-kpis').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Activos</div><div class="kpi-valor">${activos.length}</div><div class="kpi-sub ok">$${fmt(montoActivos)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invActivos)} · Rent: $${fmt(rentActivos)}</div></div>
+      <div class="kpi"><div class="kpi-label">No contesta</div><div class="kpi-valor">${noContesta.length}</div><div class="kpi-sub warn">$${fmt(montoNC)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invNC)} · Rent: $${fmt(rentNC)}</div></div>
+      <div class="kpi"><div class="kpi-label">Postergados</div><div class="kpi-valor">${postergan.length}</div><div class="kpi-sub warn">$${fmt(montoPost)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invPost)} · Rent: $${fmt(rentPost)}</div></div>
+      <div class="kpi"><div class="kpi-label">Otro</div><div class="kpi-valor">${otro.length}</div><div class="kpi-sub info">$${fmt(montoOtro)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invOtro)} · Rent: $${fmt(rentOtro)}</div></div>
+      <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${perdidos.length}</div><div class="kpi-sub danger">$${fmt(montoPerd)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invPerd)} · Rent: $${fmt(rentPerd)}</div></div>
+    `;
+    const pagos={factura:{count:0,monto:0},negro:{count:0,monto:0}};
+    activos.forEach(c=>{const p=c.tipo_pago||'negro';if(!pagos[p])pagos[p]={count:0,monto:0};pagos[p].count++;pagos[p].monto+=c.monto||0;});
+    document.getElementById('tbody-ind-pago').innerHTML=Object.entries(pagos).map(([k,v])=>`<tr><td>${k==='factura'?'Con factura':'Sin factura'}</td><td>${v.count}</td><td>$${fmt(v.monto)}</td></tr>`).join('');
+    const planes={};
+    activos.forEach(c=>{const p=c.plan||'Sin plan';if(!planes[p])planes[p]={count:0,monto:0};planes[p].count++;planes[p].monto+=c.monto||0;});
+    document.getElementById('tbody-ind-plan').innerHTML=Object.entries(planes).sort((a,b)=>b[1].monto-a[1].monto).map(([k,v])=>`<tr><td><span class="tag tag-blue">${k}</span></td><td>${v.count}</td><td>$${fmt(v.monto)}</td></tr>`).join('');
+    const perdidosMes={};
+    cliArr.filter(c=>c.estado==='perdido'&&c.fecha_perdido).forEach(c=>{
+      const m=mesFechaStr(c.fecha_perdido);
+      if(m)perdidosMes[m]=(perdidosMes[m]||0)+1;
+    });
+    const perdidosMesSort=Object.entries(perdidosMes).sort((a,b)=>b[0].localeCompare(a[0]));
+    document.getElementById('tbody-ind-perdidos').innerHTML=perdidosMesSort.length?
+      perdidosMesSort.map(([m,n])=>`<tr><td>${m}</td><td><span class="tag tag-rojo">${n}</span></td></tr>`).join(''):
+      '<tr><td colspan="2" style="color:#aaa;text-align:center">Sin clientes perdidos</td></tr>';
+
+    // Metas
+    const metas=await fetch(`${API}/metas`).then(r=>r.json());
+    const metaMes=(Array.isArray(metas)?metas:[]).find(m=>m.mes===mesAct)||{};
+    document.getElementById('ind-metas').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Meta renovaciones</div><div class="kpi-valor">${metaMes.meta_renovaciones||'-'}</div><div class="kpi-sub warn">Objetivo</div></div>
+      <div class="kpi"><div class="kpi-label">Renovados</div><div class="kpi-valor">${metaMes.real_renovaciones||0}</div><div class="kpi-sub ok">Real</div></div>
+      <div class="kpi"><div class="kpi-label">Meta nuevos</div><div class="kpi-valor">${metaMes.meta_nuevos||'-'}</div><div class="kpi-sub warn">Objetivo</div></div>
+      <div class="kpi"><div class="kpi-label">Clientes nuevos</div><div class="kpi-valor">${metaMes.real_nuevos||0}</div><div class="kpi-sub ok">Real</div></div>
+    `;
+  }catch(e){console.error('Error indicadores:',e);}
+}
+
+function renderIndLeadsMes(){
+  const leadsArr=window._indLeads||[];
+  const meses6=window._indMeses6||[];
+  const filMes=document.getElementById('fil-ind-mes')?.value||'';
+  const mesesMostrar=filMes?[filMes]:meses6;
+  document.getElementById('tbody-ind-leads').innerHTML=mesesMostrar.map(m=>{
+    const data=leadsArr.filter(l=>mesFechaStr(l.fecha)===m);
+    const c={nuevo:0,contactado:0,negociacion:0,cerrado:0,perdido:0};
+    data.forEach(l=>{if(c[l.etapa]!==undefined)c[l.etapa]++;});
+    const total=c.nuevo+c.contactado+c.negociacion;
+    const tasa=data.length>0?Math.round(c.cerrado/data.length*100):0;
+    return `<tr>
+      <td><strong>${m}</strong></td>
+      <td>${total}</td>
+      <td>${c.nuevo}</td>
+      <td>${c.contactado}</td>
+      <td>${c.negociacion}</td>
+      <td><span class="tag tag-verde">${c.cerrado}</span></td>
+      <td><span class="tag tag-rojo">${c.perdido}</span></td>
+      <td><span class="tag ${tasa>=20?'tag-verde':'tag-amarillo'}">${tasa}%</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function ultimosMeses(n){
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const result=[];
+  const d=new Date();
+  for(let i=0;i<n;i++){
+    result.unshift(`${meses[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`);
+    d.setMonth(d.getMonth()-1);
+  }
+  return result;
+}
+
+// ── AUTH ──
+async function verificarAuth(){
+  try{
+    const res=await fetch(`${API}/check_auth`).then(r=>r.json());
+    if(res.logged_in){
+      document.getElementById('login-page').style.display='none';
+      cargarConfig();
+    }else{
+      document.getElementById('login-page').style.display='flex';
+    }
+  }catch(e){
+    document.getElementById('login-page').style.display='flex';
+  }
+}
+
+async function hacerLogin(){
+  const usuario=document.getElementById('login-user').value;
+  const password=document.getElementById('login-pass').value;
+  if(!usuario||!password) return;
+  const btn=document.getElementById('btn-login');
+  btn.textContent='Ingresando...';btn.disabled=true;
+  try{
+    const res=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({usuario,password})});
+    const data=await res.json();
+    if(data.ok){
+      document.getElementById('login-page').style.display='none';
+      document.getElementById('login-err').style.display='none';
+      cargarConfig();
+    }else{
+      document.getElementById('login-err').style.display='block';
+    }
+  }catch(e){
+    document.getElementById('login-err').style.display='block';
+  }
+  btn.textContent='Ingresar';btn.disabled=false;
+}
+
+async function cerrarSesion(){
+  await fetch(`${API}/logout`,{method:'POST'});
+  document.getElementById('login-page').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+}
+
+// Init
+async function init(){
+  await verificarAuth();
+}
+init();
+</script>
+</body>
+</html>

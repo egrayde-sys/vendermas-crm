@@ -1,0 +1,8 @@
+.env
+vendermas-ads-3859a86efed0.json
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+iri/
+env.txt
