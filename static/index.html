@@ -740,7 +740,7 @@ tr:hover td{background:#fafffe;}
 
 
 <script>
-const API='http://127.0.0.1:5001/api';
+const API=window.location.hostname==='127.0.0.1'?'http://127.0.0.1:5001/api':'/api';
 let clis=[],leads=[],rens=[],metasData=[];
 let leadEdit=null,leadConv=null,leadPerdido=null,leadPerdidoEtapaAnterior=null;
 let cliEdit=null,renEdit=null,renClienteId=null,renClienteNombre=null,comLeadId=null;
