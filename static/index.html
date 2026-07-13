@@ -513,35 +513,6 @@ tr:hover td{background:#fafffe;}
 </div>
 
 // ── VARIACION ADS ──
-async function cargarVariacionAds(){
-  document.getElementById('tbody-variacion').innerHTML='<tr><td colspan="6" class="loading"><div class="spinner"></div> Cargando...</td></tr>';
-  try{
-    const data=await fetch(`${API}/googleads/variacion`).then(r=>r.json());
-    if(data.error) throw new Error(data.error);
-    const alertas=data.filter(c=>c.alerta).length;
-    const subieron=data.filter(c=>c.variacion>0).length;
-    const bajaron=data.filter(c=>c.variacion<0).length;
-    document.getElementById('kpi-variacion').innerHTML=`
-      <div class="kpi"><div class="kpi-label">Alertas +30%</div><div class="kpi-valor">${alertas}</div><div class="kpi-sub ${alertas>0?'danger':'ok'}">${alertas>0?'Requieren atención':'Todo OK'}</div></div>
-      <div class="kpi"><div class="kpi-label">Subieron</div><div class="kpi-valor">${subieron}</div><div class="kpi-sub warn">Gasto aumentó</div></div>
-      <div class="kpi"><div class="kpi-label">Bajaron</div><div class="kpi-valor">${bajaron}</div><div class="kpi-sub info">Gasto disminuyó</div></div>
-    `;
-    document.getElementById('tbody-variacion').innerHTML=data.map(c=>{
-      const color=c.alerta?'#A32D2D':c.variacion>5?'#3B6D11':c.variacion<-5?'#856600':'#555';
-      const emoji=c.variacion>0?'📈':c.variacion<0?'📉':'➡️';
-      return `<tr style="${c.alerta?'background:#fff5f5':''}">
-        <td><strong>${c.nombre}</strong></td>
-        <td><span class="tag tag-blue">${c.plan}</span></td>
-        <td>$${fmt(c.gasto_ayer)}</td>
-        <td>$${fmt(c.gasto_anteayer)}</td>
-        <td style="color:${color};font-weight:600">${emoji} ${c.variacion}%</td>
-        <td>${c.alerta?'<span class="tag tag-rojo">⚠️ Alerta</span>':'<span class="tag tag-verde">OK</span>'}</td>
-      </tr>`;
-    }).join('');
-  }catch(e){
-    document.getElementById('kpi-variacion').innerHTML=`<div style="color:#A32D2D;grid-column:span 3;padding:20px">Error: ${e.message}</div>`;
-  }
-}
 
 <!-- CONFIG -->
 <div class="page" id="page-config">
@@ -783,6 +754,7 @@ async function cargarVariacionAds(){
     </div>
   </div>
 </div>
+
 
 
 
@@ -2256,6 +2228,37 @@ function renderCalRen(){
       toast('Reprogramado ✓');
     });
   });
+}
+
+
+async function cargarVariacionAds(){
+  document.getElementById('tbody-variacion').innerHTML='<tr><td colspan="6" class="loading"><div class="spinner"></div> Cargando...</td></tr>';
+  try{
+    const data=await fetch(`${API}/googleads/variacion`).then(r=>r.json());
+    if(data.error) throw new Error(data.error);
+    const alertas=data.filter(c=>c.alerta).length;
+    const subieron=data.filter(c=>c.variacion>0).length;
+    const bajaron=data.filter(c=>c.variacion<0).length;
+    document.getElementById('kpi-variacion').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Alertas +30%</div><div class="kpi-valor">${alertas}</div><div class="kpi-sub ${alertas>0?'danger':'ok'}">${alertas>0?'Requieren atención':'Todo OK'}</div></div>
+      <div class="kpi"><div class="kpi-label">Subieron</div><div class="kpi-valor">${subieron}</div><div class="kpi-sub warn">Gasto aumentó</div></div>
+      <div class="kpi"><div class="kpi-label">Bajaron</div><div class="kpi-valor">${bajaron}</div><div class="kpi-sub info">Gasto disminuyó</div></div>
+    `;
+    document.getElementById('tbody-variacion').innerHTML=data.map(c=>{
+      const color=c.alerta?'#A32D2D':c.variacion>5?'#3B6D11':c.variacion<-5?'#856600':'#555';
+      const emoji=c.variacion>0?'📈':c.variacion<0?'📉':'➡️';
+      return `<tr style="${c.alerta?'background:#fff5f5':''}">
+        <td><strong>${c.nombre}</strong></td>
+        <td><span class="tag tag-blue">${c.plan}</span></td>
+        <td>$${fmt(c.gasto_ayer)}</td>
+        <td>$${fmt(c.gasto_anteayer)}</td>
+        <td style="color:${color};font-weight:600">${emoji} ${c.variacion}%</td>
+        <td>${c.alerta?'<span class="tag tag-rojo">⚠️ Alerta</span>':'<span class="tag tag-verde">OK</span>'}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('kpi-variacion').innerHTML=`<div style="color:#A32D2D;grid-column:span 3;padding:20px">Error: ${e.message}</div>`;
+  }
 }
 
 // ── CONFIG ──
