@@ -680,6 +680,146 @@ def get_googleads_estructura(gads_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ── SLACK ──
+import threading
+import schedule
+import time
+import requests as req_slack
+
+SLACK_WEBHOOK = os.getenv('SLACK_WEBHOOK')
+
+def slack_send(mensaje):
+    if not SLACK_WEBHOOK:
+        print('SLACK_WEBHOOK no configurado')
+        return
+    try:
+        req_slack.post(SLACK_WEBHOOK, json={'text': mensaje})
+    except Exception as e:
+        print(f'Error Slack: {e}')
+
+def resumen_lunes():
+    try:
+        sh = get_sheet()
+        ren_rows = sheet_to_dicts(sh.worksheet('Renovaciones'))
+        cli_rows = sheet_to_dicts(sh.worksheet('Clientes'))
+        cli_dict = {c.get('ID',''):c for c in cli_rows}
+        hoy = date.today()
+        mes_act = f"{['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][hoy.month-1]}-{str(hoy.year)[2:]}"
+        pagadas = [r for r in ren_rows if r.get('Estado','') == 'renovado' and r.get('Mes','') == mes_act]
+        total_ren = len(pagadas)
+        monto_total = sum(parse_int(r.get('Valor Campaña',0)) for r in pagadas)
+        comision_total = sum(parse_int(r.get('Comisión',0)) for r in pagadas)
+        ads_total = sum(parse_int(r.get('Monto Ads',0)) for r in pagadas)
+        factura = sum(parse_int(r.get('Valor Campaña',0)) for r in pagadas if cli_dict.get(r.get('ID Cliente',''),{}).get('Tipo Pago','') == 'factura')
+        negro = monto_total - factura
+        msg = f"""📊 *Resumen de ventas — {mes_act}*
+- Total renovaciones: *{total_ren}*
+- Monto total: *${monto_total:,}*
+- Comisión total: *${comision_total:,}*
+- Inversión Ads: *${ads_total:,}*
+- Con factura: *${factura:,}*
+- Sin factura: *${negro:,}*"""
+        slack_send(msg)
+    except Exception as e:
+        print(f'Error resumen_lunes: {e}')
+
+def metas_lunes():
+    try:
+        sh = get_sheet()
+        cli_rows = sheet_to_dicts(sh.worksheet('Clientes'))
+        activos = len([c for c in cli_rows if c.get('Estado','').strip().lower() != 'perdido'])
+        rows = sh.worksheet('Metas').get_all_values()
+        hoy = date.today()
+        mes_act = f"{['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][hoy.month-1]}-{str(hoy.year)[2:]}"
+        meta_ren = meta_nuevos = real_ren = real_nuevos = 0
+        for i, row in enumerate(rows):
+            if row and row[0] == 'Mes':
+                for r in rows[i+1:]:
+                    if r and r[0] == mes_act:
+                        meta_nuevos = parse_int(r[1]) if len(r)>1 else 0
+                        real_nuevos = parse_int(r[2]) if len(r)>2 else 0
+                        meta_ren = parse_int(r[3]) if len(r)>3 else 0
+                        real_ren = parse_int(r[4]) if len(r)>4 else 0
+                break
+        msg = f"""🏆 *Metas — {mes_act}*
+- Clientes activos: *{activos}*
+- Meta renovaciones: *{meta_ren}* → Renovados: *{real_ren}*
+- Meta clientes nuevos: *{meta_nuevos}* → Nuevos: *{real_nuevos}*"""
+        slack_send(msg)
+    except Exception as e:
+        print(f'Error metas_lunes: {e}')
+
+def leads_lunes():
+    try:
+        sh = get_sheet()
+        leads = sheet_to_dicts(sh.worksheet('Leads'))
+        total = sum(1 for l in leads if l.get('Etapa','') not in ['cerrado','perdido'])
+        negociacion = sum(1 for l in leads if l.get('Etapa','') == 'negociacion')
+        msg = f"""🎯 *Leads — resumen semanal*
+- Total leads activos: *{total}*
+- En negociación: *{negociacion}*"""
+        slack_send(msg)
+    except Exception as e:
+        print(f'Error leads_lunes: {e}')
+
+def contactos_hoy():
+    try:
+        sh = get_sheet()
+        leads = sheet_to_dicts(sh.worksheet('Leads'))
+        hoy_str = str(date.today())
+        contactos = [l for l in leads if l.get('Fecha Próximo Contacto','') == hoy_str and l.get('Etapa','') not in ['cerrado','perdido']]
+        if not contactos:
+            return
+        lista = '\n'.join([f"• {l.get('Nombre Empresa','')} — {l.get('Teléfono','')}" for l in contactos])
+        msg = f"📞 *Contactos de hoy ({hoy_str})*\n{lista}"
+        slack_send(msg)
+    except Exception as e:
+        print(f'Error contactos_hoy: {e}')
+
+def vencimientos_renovaciones():
+    try:
+        sh = get_sheet()
+        ren_rows = sheet_to_dicts(sh.worksheet('Renovaciones'))
+        hoy = date.today()
+        hoy_str = str(hoy)
+        alertas = []
+        for r in ren_rows:
+            if r.get('Estado','') == 'renovado':
+                continue
+            fv = r.get('Fecha Vencimiento ','').strip()
+            if not fv:
+                continue
+            try:
+                fv_date = datetime.strptime(fv, '%Y-%m-%d').date()
+                dias = (fv_date - hoy).days
+                if dias == 3:
+                    alertas.append(f"⚠️ *{r.get('Nombre Cliente','')}* vence en 3 días ({fv})")
+                elif dias == 0:
+                    alertas.append(f"🔴 *{r.get('Nombre Cliente','')}* vence HOY ({fv})")
+                elif dias < 0:
+                    alertas.append(f"❌ *{r.get('Nombre Cliente','')}* VENCIDO hace {abs(dias)} días ({fv})")
+            except:
+                continue
+        if alertas:
+            msg = "🔔 *Alertas de renovaciones*\n" + '\n'.join(alertas)
+            slack_send(msg)
+    except Exception as e:
+        print(f'Error vencimientos: {e}')
+
+def run_scheduler():
+    schedule.every().monday.at("08:00").do(resumen_lunes)
+    schedule.every().monday.at("08:00").do(metas_lunes)
+    schedule.every().monday.at("08:00").do(leads_lunes)
+    schedule.every().day.at("08:00").do(contactos_hoy)
+    schedule.every().day.at("08:00").do(vencimientos_renovaciones)
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
+
+# Iniciar scheduler en background
+scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+scheduler_thread.start()
+
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
     app.run(debug=True, port=5001)
