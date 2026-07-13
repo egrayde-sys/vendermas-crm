@@ -822,7 +822,13 @@ scheduler_thread.start()
 
 @app.route('/api/test-slack/<tipo>')
 def test_slack(tipo):
-    if tipo == 'resumen': resumen_lunes()
+    if tipo == 'resumen': 
+        resumen_lunes()
+    elif tipo == 'debug-ren':
+        sh = get_sheet()
+        ren_rows = sheet_to_dicts(sh.worksheet('Renovaciones'))
+        pagadas = [r for r in ren_rows if r.get('Estado','') == 'renovado']
+        return jsonify({'total': len(pagadas), 'ejemplo': pagadas[:2] if pagadas else []})
     elif tipo == 'metas': metas_lunes()
     elif tipo == 'leads': leads_lunes()
     elif tipo == 'contactos': contactos_hoy()
