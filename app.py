@@ -23,6 +23,7 @@ CREDENTIALS = os.getenv('CREDENTIALS', 'vendermas-ads-3859a86efed0.json')
 SCOPES      = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive']
 
 def get_sheet():
+    print(f'B64 exists: {bool(os.getenv("GOOGLE_CREDENTIALS_B64"))}, len: {len(os.getenv("GOOGLE_CREDENTIALS_B64", ""))}')
     import json as _json, base64
     creds_b64 = os.getenv('GOOGLE_CREDENTIALS_B64')
     creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
