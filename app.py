@@ -535,11 +535,11 @@ def eliminar_config():
 
 def get_ads_client():
     config = {
-        'developer_token': 'mkI2Z1gjnEHxU0iHkEE1JQ',
-        'client_id': '1087800597310-u3e3pn615j51lsdpbrkjhestqc6elp25.apps.googleusercontent.com',
-        'client_secret': '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',
-        'refresh_token': '1//0g8ErytkzFxHICgYIARAAGBASNwF-L9IrFD-SBurxAXMEaMxCYn5fK_R6DI8jsiUcR5TyYq-tu0SCUwXGAqgY9GdnhX-0Vr2jeUA',
-        'login_customer_id': '3086032626',
+        'developer_token': os.getenv('DEVELOPER_TOKEN'),
+        'client_id': os.getenv('CLIENT_ID'),
+        'client_secret': os.getenv('CLIENT_SECRET'),
+        'refresh_token': os.getenv('REFRESH_TOKEN'),
+        'login_customer_id': os.getenv('MCC_ID'),
         'use_proto_plus': True
     }
     path = '/tmp/gads_general.yaml'
