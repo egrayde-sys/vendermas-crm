@@ -859,6 +859,37 @@ def alerta_google_ads():
             slack_send(msg)
     except Exception as e:
         print(f'Error alerta_google_ads: {e}')
+def alerta_variacion_ads():
+    try:
+        sh = get_sheet()
+        clientes = sheet_to_dicts(sh.worksheet('Clientes'))
+        activos = [c for c in clientes if c.get('Estado','').strip().lower()!='perdido' and c.get('ID Google Ads','').strip()]
+        if not activos: return
+        ads_client = get_ads_client()
+        ga_service = ads_client.get_service('GoogleAdsService')
+        hoy = date.today()
+        ayer = str(hoy - timedelta(days=1))
+        anteayer = str(hoy - timedelta(days=2))
+        alertas = []
+        for c in activos:
+            gads_id = c.get('ID Google Ads','').strip().replace('-','')
+            if not gads_id: continue
+            try:
+                q_ayer = f"SELECT metrics.cost_micros FROM customer WHERE segments.date = '{ayer}'"
+                q_ante = f"SELECT metrics.cost_micros FROM customer WHERE segments.date = '{anteayer}'"
+                costo_ayer = round(sum(r.metrics.cost_micros for r in ga_service.search(customer_id=gads_id, query=q_ayer))/1_000_000)
+                costo_ante = round(sum(r.metrics.cost_micros for r in ga_service.search(customer_id=gads_id, query=q_ante))/1_000_000)
+                if costo_ante > 0:
+                    variacion = round((costo_ayer - costo_ante) / costo_ante * 100, 1)
+                    if abs(variacion) >= 30:
+                        emoji = '📈' if variacion > 0 else '📉'
+                        alertas.append(f"{emoji} *{c.get('Nombre','')}* — Ayer: ${costo_ayer:,} / Anteayer: ${costo_ante:,} — Variación: *{variacion}%*")
+            except: continue
+        if alertas:
+            msg = "⚠️ *Alerta variación Google Ads (>30%)*\n" + '\n'.join(alertas)
+            slack_send(msg)
+    except Exception as e:
+        print(f'Error alerta_variacion_ads: {e}')
 
 def run_scheduler():
     schedule.every().monday.at("08:00").do(resumen_lunes)
@@ -867,6 +898,7 @@ def run_scheduler():
     schedule.every().day.at("08:00").do(contactos_hoy)
     schedule.every().day.at("09:00").do(alerta_google_ads)
     schedule.every().day.at("08:00").do(vencimientos_renovaciones)
+    schedule.every().day.at("09:30").do(alerta_variacion_ads)
     while True:
         schedule.run_pending()
         time.sleep(60)
@@ -874,6 +906,48 @@ def run_scheduler():
 # Iniciar scheduler en background
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
+
+@app.route('/api/googleads/variacion')
+@login_required
+def get_googleads_variacion():
+    try:
+        sh = get_sheet()
+        clientes = sheet_to_dicts(sh.worksheet('Clientes'))
+        activos = [c for c in clientes if c.get('Estado','').strip().lower()!='perdido' and c.get('ID Google Ads','').strip()]
+        if not activos: return jsonify([])
+        ads_client = get_ads_client()
+        ga_service = ads_client.get_service('GoogleAdsService')
+        hoy = date.today()
+        ayer = str(hoy - timedelta(days=1))
+        anteayer = str(hoy - timedelta(days=2))
+        result = []
+        for c in activos:
+            gads_id = c.get('ID Google Ads','').strip().replace('-','')
+            if not gads_id: continue
+            try:
+                q_ayer = f"SELECT metrics.cost_micros FROM customer WHERE segments.date = '{ayer}'"
+                q_ante = f"SELECT metrics.cost_micros FROM customer WHERE segments.date = '{anteayer}'"
+                costo_ayer = round(sum(r.metrics.cost_micros for r in ga_service.search(customer_id=gads_id, query=q_ayer))/1_000_000)
+                costo_ante = round(sum(r.metrics.cost_micros for r in ga_service.search(customer_id=gads_id, query=q_ante))/1_000_000)
+                if costo_ante > 0:
+                    variacion = round((costo_ayer - costo_ante) / costo_ante * 100, 1)
+                else:
+                    variacion = 0 if costo_ayer == 0 else 100
+                alerta = abs(variacion) >= 30
+                result.append({
+                    'id': c.get('ID',''), 'nombre': c.get('Nombre',''), 'plan': c.get('Plan',''),
+                    'gasto_ayer': costo_ayer, 'gasto_anteayer': costo_ante,
+                    'variacion': variacion, 'alerta': alerta
+                })
+            except Exception as ex:
+                result.append({
+                    'id': c.get('ID',''), 'nombre': c.get('Nombre',''), 'plan': c.get('Plan',''),
+                    'gasto_ayer': 0, 'gasto_anteayer': 0, 'variacion': 0, 'alerta': False, 'error': str(ex)
+                })
+        result.sort(key=lambda x: abs(x['variacion']), reverse=True)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
