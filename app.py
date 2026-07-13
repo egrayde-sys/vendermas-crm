@@ -608,27 +608,40 @@ def get_googleads():
         for c in activos:
             gads_id = c.get('ID Google Ads','').strip().replace('-','')
             if not gads_id: continue
+            monto=parse_int(c.get('Monto',0)); inv=parse_int(c.get('Inversión Ads',0))
             try:
-                q = f"SELECT metrics.impressions,metrics.clicks,metrics.ctr,metrics.average_cpc,metrics.cost_micros FROM campaign WHERE segments.date BETWEEN '{fecha_ini}' AND '{fecha_fin}'"
+                # Query simple sin agregar por campaña
+                q = f"""SELECT metrics.impressions, metrics.clicks, metrics.cost_micros
+                    FROM customer
+                    WHERE segments.date BETWEEN '{fecha_ini}' AND '{fecha_fin}'"""
+                rows = list(ga_service.search(customer_id=gads_id, query=q))
                 imp=clics=costo=0
-                for row in ga_service.search(customer_id=gads_id, query=q):
-                    m=row.metrics; imp+=m.impressions; clics+=m.clicks; costo+=m.cost_micros
+                for row in rows:
+                    m=row.metrics
+                    imp+=m.impressions; clics+=m.clicks; costo+=m.cost_micros
                 costo_clp=round(costo/1_000_000)
-                q30=f"SELECT metrics.cost_micros FROM campaign WHERE segments.date BETWEEN '{ini30}' AND '{hoy30}'"
+                # Query 30 días
+                q30=f"""SELECT metrics.cost_micros FROM customer
+                    WHERE segments.date BETWEEN '{ini30}' AND '{hoy30}'"""
                 costo30=round(sum(r.metrics.cost_micros for r in ga_service.search(customer_id=gads_id,query=q30))/1_000_000)
                 ctr=round((clics/imp*100) if imp>0 else 0,2)
                 cpc=round((costo_clp/clics) if clics>0 else 0)
-                monto=parse_int(c.get('Monto',0)); inv=parse_int(c.get('Inversión Ads',0))
                 es_admin=c.get('Plan','')=='Administración'
-                result.append({'id':c.get('ID',''),'nombre':c.get('Nombre',''),'plan':c.get('Plan',''),
-                    'monto':monto,'inversion_ads':inv,'rentabilidad':monto-inv,'google_ads_id':gads_id,
-                    'costo_ads':costo_clp,'impresiones':imp,'clics':clics,'ctr':ctr,'cpc':cpc,
-                    'costo_30d':0 if es_admin else costo30,'alerta_inv':False if es_admin else costo30>inv})
+                result.append({
+                    'id':c.get('ID',''),'nombre':c.get('Nombre',''),'plan':c.get('Plan',''),
+                    'monto':monto,'inversion_ads':inv,'rentabilidad':monto-inv,
+                    'google_ads_id':gads_id,'costo_ads':costo_clp,
+                    'impresiones':imp,'clics':clics,'ctr':ctr,'cpc':cpc,
+                    'costo_30d':0 if es_admin else costo30,
+                    'alerta_inv':False if es_admin else costo30>inv
+                })
             except Exception as ex:
-                monto=parse_int(c.get('Monto',0)); inv=parse_int(c.get('Inversión Ads',0))
-                result.append({'id':c.get('ID',''),'nombre':c.get('Nombre',''),'plan':c.get('Plan',''),
-                    'monto':monto,'inversion_ads':inv,'rentabilidad':monto-inv,'google_ads_id':gads_id,
-                    'costo_ads':0,'impresiones':0,'clics':0,'ctr':0,'cpc':0,'costo_30d':0,'alerta_inv':False,'error':str(ex)})
+                result.append({
+                    'id':c.get('ID',''),'nombre':c.get('Nombre',''),'plan':c.get('Plan',''),
+                    'monto':monto,'inversion_ads':inv,'rentabilidad':monto-inv,
+                    'google_ads_id':gads_id,'costo_ads':0,'impresiones':0,
+                    'clics':0,'ctr':0,'cpc':0,'costo_30d':0,'alerta_inv':False,'error':str(ex)
+                })
         return jsonify(result)
     except Exception as e:
         return jsonify({'error':str(e)}), 500
