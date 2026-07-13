@@ -108,6 +108,17 @@ def check_auth():
 def index():
     return app.send_static_file('index.html')
 
+
+@app.route('/api/debug')
+def debug():
+    import os
+    return jsonify({
+        'b64_exists': bool(os.getenv('GOOGLE_CREDENTIALS_B64')),
+        'b64_len': len(os.getenv('GOOGLE_CREDENTIALS_B64', '')),
+        'sheet_id': os.getenv('SHEET_ID', 'NOT SET'),
+        'login_user': os.getenv('LOGIN_USER', 'NOT SET'),
+    })
+
 @app.route('/api/clientes')
 @login_required
 def get_clientes():
