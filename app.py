@@ -603,7 +603,7 @@ def get_googleads():
         if not activos: return jsonify([])
         ads_client = get_ads_client()
         ga_service = ads_client.get_service('GoogleAdsService')
-        hoy30=date.today(); ini30=hoy30-timedelta(days=30)
+        hoy30=date.today(); ini30=hoy30-timedelta(days=1)
         result = []
         for c in activos:
             gads_id = c.get('ID Google Ads','').strip().replace('-','')
