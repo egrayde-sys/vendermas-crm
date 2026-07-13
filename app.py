@@ -23,20 +23,29 @@ CREDENTIALS = os.getenv('CREDENTIALS', 'vendermas-ads-3859a86efed0.json')
 SCOPES      = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive']
 
 def get_sheet():
-    import json as _json
+    import json as _json, base64
+    creds_b64 = os.getenv('GOOGLE_CREDENTIALS_B64')
     creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
-    if creds_json:
+    if creds_b64:
+        try:
+            creds_info = _json.loads(base64.b64decode(creds_b64).decode('utf-8'))
+            creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
+            print('Credentials loaded from B64')
+        except Exception as e:
+            print(f'ERROR parsing GOOGLE_CREDENTIALS_B64: {e}')
+            raise
+    elif creds_json:
         try:
             creds_info = _json.loads(creds_json)
             creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
+            print('Credentials loaded from JSON')
         except Exception as e:
             print(f'ERROR parsing GOOGLE_CREDENTIALS_JSON: {e}')
             raise
     else:
-        print(f'WARNING: GOOGLE_CREDENTIALS_JSON not set, using file: {CREDENTIALS}')
+        print(f'WARNING: No credentials env var set, using file: {CREDENTIALS}')
         creds = Credentials.from_service_account_file(CREDENTIALS, scopes=SCOPES)
-    sheet_id = os.getenv('SHEET_ID', SHEET_ID)
-    return gspread.authorize(creds).open_by_key(sheet_id)
+    return gspread.authorize(creds).open_by_key(SHEET_ID)
 
 def sheet_to_dicts(ws):
     rows = ws.get_all_values()
