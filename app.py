@@ -194,10 +194,10 @@ def crear_cliente():
         cid = 'c'+str(uuid.uuid4())[:6]
         monto = parse_int(d.get('monto',0))
         inv   = parse_int(d.get('inversion_ads',0))
-        ws.append_row([cid, d.get('nombre',''), d.get('contacto',''), d.get('email',''),
-            d.get('telefono',''), d.get('web',''), d.get('rubro',''), d.get('plan',''),
+        ws.append_row([cid, sanitizar(d.get('nombre','')), sanitizar(d.get('contacto','')), sanitizar(d.get('email','')),
+            sanitizar(d.get('telefono','')), sanitizar(d.get('web','')), sanitizar(d.get('rubro','')), sanitizar(d.get('plan','')),
             monto, inv, monto-inv, d.get('fecha_inicio', str(date.today())),
-            '', d.get('tipo_pago','factura'), d.get('google_ads_id',''), d.get('estado','activo')],
+            '', sanitizar(d.get('tipo_pago','factura')), sanitizar(d.get('google_ads_id','')), sanitizar(d.get('estado','activo'))],
             value_input_option='USER_ENTERED')
         return jsonify({'ok': True, 'id': cid})
     except Exception as e:
@@ -258,10 +258,10 @@ def crear_lead():
         ws = sh.worksheet('Leads')
         d = request.json
         lid = 'l'+str(uuid.uuid4())[:6]
-        ws.append_row([lid, d.get('nombre',''), d.get('contacto',''), d.get('email',''),
-            d.get('telefono',''), d.get('web',''), d.get('fuente',''),
-            d.get('plan_interes',''), d.get('monto_estimado',0), d.get('etapa','nuevo'),
-            str(date.today()), d.get('fecha_contacto', str(date.today())), d.get('notas','')],
+        ws.append_row([lid, sanitizar(d.get('nombre','')), sanitizar(d.get('contacto','')), sanitizar(d.get('email','')),
+            sanitizar(d.get('telefono','')), sanitizar(d.get('web','')), sanitizar(d.get('fuente','')),
+            sanitizar(d.get('plan_interes','')), d.get('monto_estimado',0), sanitizar(d.get('etapa','nuevo')),
+            str(date.today()), d.get('fecha_contacto', str(date.today())), sanitizar(d.get('notas',''))],
             value_input_option='USER_ENTERED')
         return jsonify({'ok': True, 'id': lid})
     except Exception as e:
@@ -281,15 +281,17 @@ def actualizar_lead(lid):
             'plan_interes':'Plan Interés','monto_estimado':'Monto Estimado',
             'etapa':'Etapa','fecha_contacto':'Fecha Contacto','notas':'Notas',
             'fecha_venta':'Fecha Venta','motivo_rechazo':'Motivo Rechazo',
-            'comentarios':'Comentarios','fecha_perdido':  'Fecha Perdido',
-            'fecha_proximo_contacto': 'Fecha Próximo Contacto',
+            'comentarios':'Comentarios','fecha_perdido':'Fecha Perdido',
+            'fecha_proximo_contacto':'Fecha Próximo Contacto',
         }
+        campos_texto = ['nombre','contacto','email','telefono','web','fuente','plan_interes','etapa','notas','motivo_rechazo','comentarios']
         for i, row in enumerate(rows[1:], start=2):
             if row[0] == lid:
                 d = request.json
                 for campo, header in campo_map.items():
                     if campo in d and header in headers:
-                        ws.update_cell(i, headers.index(header)+1, d[campo])
+                        valor = sanitizar(d[campo]) if campo in campos_texto else d[campo]
+                        ws.update_cell(i, headers.index(header)+1, valor)
                 return jsonify({'ok': True})
         return jsonify({'error': 'No encontrado'}), 404
     except Exception as e:
