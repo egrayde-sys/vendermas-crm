@@ -179,6 +179,7 @@ tr:hover td{background:#fafffe;}
     <div class="nav-item" onclick="nav('clientes',this)">👥 Clientes</div>
     <div class="nav-item" onclick="nav('cal-renovaciones',this)">📅 Cal. Renovaciones</div>
     <div class="nav-item" onclick="nav('googleads',this)">📈 Google Ads</div>
+    <div class="nav-item" onclick="nav('variacion-ads',this)">📉 Variación Ads</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Configuración</div>
@@ -494,7 +495,53 @@ tr:hover td{background:#fafffe;}
   </div>
 </div>
     
-    
+<!-- VARIACION ADS -->
+<div class="page" id="page-variacion-ads">
+  <div class="page-titulo">Variación Google Ads</div>
+  <div class="page-sub">Comparativo ayer vs anteayer — alerta si variación supera 30%</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px" id="kpi-variacion"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Detalle por cliente</div>
+      <input class="inp" style="width:160px" placeholder="Buscar..." oninput="filtrarSimple(this.value,'tbody-variacion')">
+    </div>
+    <table>
+      <thead><tr><th>Cliente</th><th>Plan</th><th>Gasto ayer</th><th>Gasto anteayer</th><th>Variación</th><th>Estado</th></tr></thead>
+      <tbody id="tbody-variacion"></tbody>
+    </table>
+  </div>
+</div>
+
+// ── VARIACION ADS ──
+async function cargarVariacionAds(){
+  document.getElementById('tbody-variacion').innerHTML='<tr><td colspan="6" class="loading"><div class="spinner"></div> Cargando...</td></tr>';
+  try{
+    const data=await fetch(`${API}/googleads/variacion`).then(r=>r.json());
+    if(data.error) throw new Error(data.error);
+    const alertas=data.filter(c=>c.alerta).length;
+    const subieron=data.filter(c=>c.variacion>0).length;
+    const bajaron=data.filter(c=>c.variacion<0).length;
+    document.getElementById('kpi-variacion').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Alertas +30%</div><div class="kpi-valor">${alertas}</div><div class="kpi-sub ${alertas>0?'danger':'ok'}">${alertas>0?'Requieren atención':'Todo OK'}</div></div>
+      <div class="kpi"><div class="kpi-label">Subieron</div><div class="kpi-valor">${subieron}</div><div class="kpi-sub warn">Gasto aumentó</div></div>
+      <div class="kpi"><div class="kpi-label">Bajaron</div><div class="kpi-valor">${bajaron}</div><div class="kpi-sub info">Gasto disminuyó</div></div>
+    `;
+    document.getElementById('tbody-variacion').innerHTML=data.map(c=>{
+      const color=c.alerta?'#A32D2D':c.variacion>5?'#3B6D11':c.variacion<-5?'#856600':'#555';
+      const emoji=c.variacion>0?'📈':c.variacion<0?'📉':'➡️';
+      return `<tr style="${c.alerta?'background:#fff5f5':''}">
+        <td><strong>${c.nombre}</strong></td>
+        <td><span class="tag tag-blue">${c.plan}</span></td>
+        <td>$${fmt(c.gasto_ayer)}</td>
+        <td>$${fmt(c.gasto_anteayer)}</td>
+        <td style="color:${color};font-weight:600">${emoji} ${c.variacion}%</td>
+        <td>${c.alerta?'<span class="tag tag-rojo">⚠️ Alerta</span>':'<span class="tag tag-verde">OK</span>'}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('kpi-variacion').innerHTML=`<div style="color:#A32D2D;grid-column:span 3;padding:20px">Error: ${e.message}</div>`;
+  }
+}
 
 <!-- CONFIG -->
 <div class="page" id="page-config">
@@ -779,7 +826,7 @@ function sincSelects(){
   poblar('cv-plan',cfg.planes);poblar('cv-pago',cfg.pagos);
   poblar('sel-motivo',cfg.motivos);
 }
-const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),config:()=>renderConfig()};
+const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),'variacion-ads':()=>cargarVariacionAds(),config:()=>renderConfig()};
 function nav(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
