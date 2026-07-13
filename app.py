@@ -705,7 +705,11 @@ def resumen_lunes():
         cli_dict = {c.get('ID',''):c for c in cli_rows}
         hoy = date.today()
         mes_act = f"{['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][hoy.month-1]}-{str(hoy.year)[2:]}"
-        pagadas = [r for r in ren_rows if r.get('Estado','') == 'renovado' and r.get('Mes','') == mes_act]
+        mes_corto = mes_act.split('-')[0]
+        anio_corto = mes_act.split('-')[1]
+        pagadas = [r for r in ren_rows if r.get('Estado','') == 'renovado' 
+                   and r.get('Mes','') == mes_corto 
+                   and r.get('Año','').strip().endswith(anio_corto)]
         total_ren = len(pagadas)
         monto_total = sum(parse_int(r.get('Valor Campaña',0)) for r in pagadas)
         comision_total = sum(parse_int(r.get('Comisión',0)) for r in pagadas)
