@@ -23,14 +23,20 @@ CREDENTIALS = os.getenv('CREDENTIALS', 'vendermas-ads-3859a86efed0.json')
 SCOPES      = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive']
 
 def get_sheet():
+    import json as _json
     creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
     if creds_json:
-        import json
-        creds_info = json.loads(creds_json)
-        creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
+        try:
+            creds_info = _json.loads(creds_json)
+            creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
+        except Exception as e:
+            print(f'ERROR parsing GOOGLE_CREDENTIALS_JSON: {e}')
+            raise
     else:
+        print(f'WARNING: GOOGLE_CREDENTIALS_JSON not set, using file: {CREDENTIALS}')
         creds = Credentials.from_service_account_file(CREDENTIALS, scopes=SCOPES)
-    return gspread.authorize(creds).open_by_key(SHEET_ID)
+    sheet_id = os.getenv('SHEET_ID', SHEET_ID)
+    return gspread.authorize(creds).open_by_key(sheet_id)
 
 def sheet_to_dicts(ws):
     rows = ws.get_all_values()
