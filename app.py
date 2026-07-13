@@ -810,11 +810,45 @@ def vencimientos_renovaciones():
     except Exception as e:
         print(f'Error vencimientos: {e}')
 
+def alerta_google_ads():
+    try:
+        sh = get_sheet()
+        cli_rows = sheet_to_dicts(sh.worksheet('Clientes'))
+        activos = [c for c in cli_rows if c.get('Estado','').strip().lower() != 'perdido' and c.get('ID Google Ads','').strip()]
+        if not activos:
+            return
+        ads_client = get_ads_client()
+        ga_service = ads_client.get_service('GoogleAdsService')
+        hoy = date.today()
+        ini30 = str(hoy - timedelta(days=30))
+        hoy_str = str(hoy)
+        alertas = []
+        for c in activos:
+            gads_id = c.get('ID Google Ads','').strip().replace('-','')
+            inv = parse_int(c.get('Inversión Ads',0))
+            if not gads_id or not inv:
+                continue
+            try:
+                q = f"SELECT metrics.cost_micros FROM campaign WHERE segments.date BETWEEN '{ini30}' AND '{hoy_str}'"
+                costo = sum(r.metrics.cost_micros for r in ga_service.search(customer_id=gads_id, query=q))
+                costo_clp = round(costo/1_000_000)
+                if costo_clp > inv:
+                    exceso = costo_clp - inv
+                    alertas.append(f"⚠️ *{c.get('Nombre','')}* — Gasto: ${costo_clp:,} / Contratado: ${inv:,} — Exceso: *${exceso:,}*")
+            except Exception as ex:
+                print(f'Error ads {c.get("Nombre","")}: {ex}')
+        if alertas:
+            msg = "🚨 *Alerta Google Ads — Gasto supera inversión contratada*\n" + '\n'.join(alertas)
+            slack_send(msg)
+    except Exception as e:
+        print(f'Error alerta_google_ads: {e}')
+
 def run_scheduler():
     schedule.every().monday.at("08:00").do(resumen_lunes)
     schedule.every().monday.at("08:00").do(metas_lunes)
     schedule.every().monday.at("08:00").do(leads_lunes)
     schedule.every().day.at("08:00").do(contactos_hoy)
+    schedule.every().day.at("09:00").do(alerta_google_ads)
     schedule.every().day.at("08:00").do(vencimientos_renovaciones)
     while True:
         schedule.run_pending()
@@ -823,6 +857,16 @@ def run_scheduler():
 # Iniciar scheduler en background
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
+
+@app.route('/api/test-slack/<tipo>')
+def test_slack(tipo):
+    if tipo == 'resumen': resumen_lunes()
+    elif tipo == 'metas': metas_lunes()
+    elif tipo == 'leads': leads_lunes()
+    elif tipo == 'contactos': contactos_hoy()
+    elif tipo == 'vencimientos': vencimientos_renovaciones()
+    elif tipo == 'ads': alerta_google_ads()
+    return jsonify({'ok': True, 'tipo': tipo})
 
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
