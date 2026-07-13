@@ -1,2 +1,11 @@
+cat > requirements.txt << 'EOF'
 flask
 flask-cors
+flask-limiter
+python-dotenv
+gspread
+google-auth
+google-ads
+pyyaml
+gunicorn
+EOF
