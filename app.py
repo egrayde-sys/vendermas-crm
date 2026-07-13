@@ -820,6 +820,15 @@ def run_scheduler():
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
 
+@app.route('/api/test-slack/<tipo>')
+def test_slack(tipo):
+    if tipo == 'resumen': resumen_lunes()
+    elif tipo == 'metas': metas_lunes()
+    elif tipo == 'leads': leads_lunes()
+    elif tipo == 'contactos': contactos_hoy()
+    elif tipo == 'vencimientos': vencimientos_renovaciones()
+    return jsonify({'ok': True, 'tipo': tipo})
+
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
     app.run(debug=True, port=5001)
