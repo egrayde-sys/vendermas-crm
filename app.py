@@ -89,11 +89,19 @@ def login_required(f):
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    d = request.json
-    if d.get('usuario') == LOGIN_USER and d.get('password') == LOGIN_PASSWORD:
-        session['logged_in'] = True
-        return jsonify({'ok': True})
-    return jsonify({'error': 'Credenciales incorrectas'}), 401
+    try:
+        d = request.json
+        sh = get_sheet()
+        usuarios = sheet_to_dicts(sh.worksheet('Usuarios'))
+        for u in usuarios:
+            if u.get('Usuario','').strip() == d.get('usuario','') and u.get('Password','').strip() == d.get('password',''):
+                session['logged_in'] = True
+                session['usuario'] = d.get('usuario','')
+                session['rol'] = u.get('Rol','ejecutiva')
+                return jsonify({'ok': True, 'rol': u.get('Rol','ejecutiva')})
+        return jsonify({'error': 'Credenciales incorrectas'}), 401
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
