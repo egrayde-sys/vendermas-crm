@@ -23,7 +23,13 @@ CREDENTIALS = os.getenv('CREDENTIALS', 'vendermas-ads-3859a86efed0.json')
 SCOPES      = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive']
 
 def get_sheet():
-    creds = Credentials.from_service_account_file(CREDENTIALS, scopes=SCOPES)
+    creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+    if creds_json:
+        import json
+        creds_info = json.loads(creds_json)
+        creds = Credentials.from_service_account_info(creds_info, scopes=SCOPES)
+    else:
+        creds = Credentials.from_service_account_file(CREDENTIALS, scopes=SCOPES)
     return gspread.authorize(creds).open_by_key(SHEET_ID)
 
 def sheet_to_dicts(ws):
