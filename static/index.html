@@ -1851,8 +1851,11 @@ async function cambiarEstadoCliente(id,estado,sel){
 async function guardarOtroDetalle(id,texto){
   if(!texto.trim()) return;
   try{
-    await fetch(`${API}/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({otro_detalle:texto})});
-    toast('Detalle guardado ✓');
+    const res=await fetch(`${API}/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({otro_detalle:texto})});
+    if(res.status===401){toast('Sesión expirada, recarga la página','error');return;}
+    const data=await res.json();
+    if(data.ok) toast('Detalle guardado ✓');
+    else toast('Error al guardar','error');
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
