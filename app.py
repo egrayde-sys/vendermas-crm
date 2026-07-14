@@ -176,11 +176,13 @@ def get_cliente(cid):
                     'fecha_pago': r.get('Fecha Pago',''),
                     'fecha_vencimiento': r.get('Fecha Vencimiento ','').strip(),
                     'fecha_reprogramacion': r.get('Fecha Reprogramación',''),
+                    'factura_pendiente': r.get('Factura Pendiente',''),
                     'monto': parse_int(r.get('Valor Campaña',0)),
                     'comision': parse_int(r.get('Comisión',0)),
                     'monto_ads': parse_int(r.get('Monto Ads',0)),
                     'factura': r.get('N° Factura',''), 'banco': r.get('Banco',''),
-                    'frecuencia': r.get('Frecuencia','mensual'),
+                    'frecuencia':  r.get('Frecuencia','mensual'),
+                    'factura_pendiente': r.get('Factura Pendiente',''),
                 })
         monto = parse_int(c.get('Monto',0))
         inv   = parse_int(c.get('Inversión Ads',0))
@@ -392,7 +394,8 @@ def actualizar_renovacion(rid):
             'monto':'Valor Campaña','comision':'Comisión','monto_ads':'Monto Ads',
             'factura':'N° Factura','banco':'Banco','frecuencia':'Frecuencia',
             'anio':'Año','fecha_vencimiento':'Fecha Vencimiento ',
-            'fecha_reprogramacion':'Fecha Reprogramación'
+            'fecha_reprogramacion':'Fecha Reprogramación',
+            'factura_pendiente':'Factura Pendiente'
         }
         for i, row in enumerate(rows[1:], start=2):
             if row[0] == rid:
