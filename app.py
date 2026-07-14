@@ -52,7 +52,13 @@ def sheet_to_dicts(ws):
     rows = ws.get_all_values()
     if len(rows) < 2: return []
     headers = rows[0]
-    return [dict(zip(headers, row)) for row in rows[1:] if any(cell.strip() for cell in row)]
+    result = []
+    for row in rows[1:]:
+        if any(cell.strip() for cell in row):
+            # Pad row with empty strings if shorter than headers
+            padded = row + [''] * (len(headers) - len(row))
+            result.append(dict(zip(headers, padded)))
+    return result
 
 def parse_int(v):
     try: return int(str(v).replace('.','').replace(',','').replace('$','').strip())
@@ -357,12 +363,8 @@ def get_renovaciones():
             })
         pendientes = [r for r in result if r.get('factura_pendiente')]
         print(f'Facturas pendientes: {len(pendientes)}')
-        ren_raw = sh.worksheet('Renovaciones').get_all_values()
-        headers_raw = ren_raw[0]
-        fp_idx = headers_raw.index('Factura Pendiente') if 'Factura Pendiente' in headers_raw else -1
-        for row in ren_raw[1:]:
-            if fp_idx != -1 and len(row) > fp_idx and row[fp_idx]:
-                print(f'Encontrada: ID={row[0]}, factura_pendiente={row[fp_idx]}')
+        pendientes_count = sum(1 for r in result if r.get('factura_pendiente'))
+        print(f'Facturas pendientes final: {pendientes_count}')
         result.sort(key=lambda x: x['fecha_vencimiento'] or '9999')
         return jsonify(result)
     except Exception as e:
