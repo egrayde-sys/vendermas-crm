@@ -916,7 +916,7 @@ async function cargarClientes(){
     // Cargar facturas pendientes
     fetch(`${API}/renovaciones`).then(r=>r.json()).then(rens=>{
       if(!Array.isArray(rens)) return;
-      const pendientes=rens.filter(r=>r.factura_pendiente==='si'&&r.estado!=='renovado');
+      const pendientes=rens.filter(r=>r.factura_pendiente==='si'&&r.estado==='renovado'&&!r.factura);
       const montoPend=pendientes.reduce((s,r)=>s+(r.monto||0),0);
       document.getElementById('kpi-facturas-pendientes').innerHTML=`
         <div class="kpi" style="border-color:#FFC107;background:#fffdf0">
