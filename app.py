@@ -975,6 +975,15 @@ def get_googleads_variacion():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/debug-ren')
+@login_required  
+def debug_ren():
+    sh = get_sheet()
+    rows = sh.worksheet('Renovaciones').get_all_values()
+    headers = rows[0]
+    idx = headers.index('Factura Pendiente') if 'Factura Pendiente' in headers else -1
+    return jsonify({'col_idx': idx, 'headers': headers, 'sample': [r[idx] for r in rows[1:5] if idx != -1]})
+
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
     app.run(debug=True, port=5001)
