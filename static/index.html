@@ -910,8 +910,7 @@ async function cargarClientes(){
     // Poblar filtros
     const planes=[...new Set(clis.map(c=>c.plan))];
     document.getElementById('fil-cli-plan').innerHTML='<option value="">Todos los planes</option>'+planes.map(p=>`<option>${p}</option>`).join('');
-    const estados=[...new Set(clis.map(c=>c.estado).filter(Boolean))];
-    document.getElementById('fil-cli-estado').innerHTML='<option value="">Todo estado</option>'+estados.map(e=>`<option value="${e}">${e}</option>`).join('');
+    // No sobrescribir el select de estados - ya está fijo en el HTML
     renderClientes();
   }catch(e){document.getElementById('tbody-clientes').innerHTML=`<tr><td colspan="9" style="color:#A32D2D;padding:20px">Error: ${e.message}</td></tr>`;}
 }
