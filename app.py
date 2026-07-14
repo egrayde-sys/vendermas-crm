@@ -357,8 +357,9 @@ def get_renovaciones():
             })
         pendientes = [r for r in result if r.get('factura_pendiente')]
         print(f'Facturas pendientes: {len(pendientes)}')
-        if pendientes:
-            print(f'Ejemplo: {pendientes[0]}')
+        ren_raw = sh.worksheet('Renovaciones').get_all_values()
+        for row in ren_raw[1:3]:
+            print(f'Row len: {len(row)}, headers len: {len(ren_raw[0])}, last: {repr(row[-1]) if row else "empty"}')
         result.sort(key=lambda x: x['fecha_vencimiento'] or '9999')
         return jsonify(result)
     except Exception as e:
