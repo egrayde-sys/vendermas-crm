@@ -78,6 +78,9 @@ from functools import wraps
 from flask import session
 
 app.secret_key = os.getenv('SECRET_KEY', 'vendermas-secret-2026')
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 def login_required(f):
     @wraps(f)
