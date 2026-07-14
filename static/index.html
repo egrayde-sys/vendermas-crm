@@ -1234,6 +1234,7 @@ async function guardarRenovacion(){
         toast('Renovación actualizada ✓');
       }
     } else {
+      console.log('Data:', JSON.stringify(data));
       data.id_cliente=renClienteId;
       data.nombre_cliente=renClienteNombre;
       const res=await fetch(`${API}/renovaciones`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
