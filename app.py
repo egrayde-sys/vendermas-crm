@@ -173,6 +173,10 @@ def get_cliente(cid):
         c = next((r for r in rows if r.get('ID') == cid), None)
         if not c: return jsonify({'error': 'No encontrado'}), 404
         ren_rows = sheet_to_dicts(sh.worksheet('Renovaciones'))
+        for r in ren_rows:
+            if r.get('ID') == 'rfbee23':
+                print(f'rfbee23: {r}')
+                break
         renovaciones = []
         for r in ren_rows:
             if r.get('ID Cliente') == cid:
