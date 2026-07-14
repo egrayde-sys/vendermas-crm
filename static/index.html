@@ -891,6 +891,7 @@ async function cargarClientes(){
   try{
     const cl=await fetch(`${API}/clientes`).then(r=>r.json());
     clis=Array.isArray(cl)?cl:[];
+    fetch(`${API}/renovaciones`).then(r=>r.json()).then(d=>{window._rensClientes=Array.isArray(d)?d:[];});
     const activos=clis.filter(c=>c.estado!=='perdido').length;
     const noContesta=clis.filter(c=>c.estado==='no contesta').length;
     const postergados=clis.filter(c=>c.estado==='postergado').length;
