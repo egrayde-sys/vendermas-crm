@@ -230,7 +230,7 @@ def actualizar_cliente(cid):
             'inversion_ads':'Inversión Ads','fecha_inicio':'Fecha Inicio',
             'tipo_pago':'Tipo Pago','google_ads_id':'ID Google Ads',
             'estado':'Estado','fecha_perdido':'Fecha Perdido',
-            'otro_detalle':'Otro Detalle'
+            'otro_detalle':'otro_detalle'
         }
         for i, row in enumerate(rows[1:], start=2):
             if row[0] == cid:
