@@ -148,7 +148,8 @@ def get_clientes():
                 'tipo_pago': r.get('Tipo Pago',''),
                 'google_ads_id': r.get('ID Google Ads',''),
                 'fecha_perdido': r.get('Fecha Perdido',''),
-                'estado': r.get('Estado','').strip().lower(),
+                'estado':         r.get('Estado','').strip().lower(),
+                'otro_detalle':   r.get('Otro Detalle',''),
             })
         return jsonify(result)
     except Exception as e:
@@ -187,7 +188,8 @@ def get_cliente(cid):
             'monto': monto, 'inversion_ads': inv, 'rentabilidad': monto-inv,
             'fecha_inicio': c.get('Fecha Inicio',''),
             'tipo_pago': c.get('Tipo Pago',''), 'google_ads_id': c.get('ID Google Ads',''),
-            'estado': c.get('Estado',''), 'renovaciones': renovaciones
+            'estado': c.get('Estado',''), 'otro_detalle': c.get('Otro Detalle',''),
+            'renovaciones': renovaciones
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -224,7 +226,8 @@ def actualizar_cliente(cid):
             'web':'Web','rubro':'Rubro','plan':'Plan','monto':'Monto',
             'inversion_ads':'Inversión Ads','fecha_inicio':'Fecha Inicio',
             'tipo_pago':'Tipo Pago','google_ads_id':'ID Google Ads',
-            'estado':'Estado','fecha_perdido':'Fecha Perdido'
+            'estado':'Estado','fecha_perdido':'Fecha Perdido',
+            'otro_detalle':'Otro Detalle'
         }
         for i, row in enumerate(rows[1:], start=2):
             if row[0] == cid:
