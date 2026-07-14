@@ -1241,6 +1241,10 @@ async function guardarRenovacion(){
       const nueva=await res.json();
       // Si se crea como pagada, generar siguiente período automáticamente
       if(data.estado==='renovado'&&data.fecha_pago&&nueva.id){
+        // Primero guardar factura_pendiente en la renovación creada
+        if(data.factura_pendiente){
+          await fetch(`${API}/renovaciones/${nueva.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({factura_pendiente:data.factura_pendiente})});
+        }
         await fetch(`${API}/renovaciones/${nueva.id}/pagar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fecha_pago:data.fecha_pago})});
       }
       toast('Renovación creada ✓');
