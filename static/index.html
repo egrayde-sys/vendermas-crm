@@ -228,13 +228,34 @@ tr:hover td{background:#fafffe;}
         <div class="card-acciones">
           <select class="sel" id="fil-cli-plan" onchange="renderClientes()"><option value="">Todos los planes</option></select>
           <select class="sel" id="fil-cli-pago" onchange="renderClientes()"><option value="">Tipo de pago</option><option value="factura">Factura</option><option value="negro">Sin factura</option></select>
-          <select class="sel" id="fil-cli-estado" onchange="renderClientes()"><option value="">Todo estado</option></select>
+          <select class="sel" id="fil-cli-estado" onchange="renderClientes()">
+            <option value="">Todo estado</option>
+            <option value="activo">Activo</option>
+            <option value="no contesta">No contesta</option>
+            <option value="postergado">Postergado</option>
+            <option value="otro">Otro</option>
+            <option value="perdido">Perdido</option>
+          </select>
+          <select class="sel" onchange="filCli.renovacion=this.value;renderClientes()">
+            <option value="">Toda renovación</option>
+            <option value="renovado">Renovados este mes</option>
+            <option value="pendiente">Pendientes este mes</option>
+          </select>
           <input class="inp" style="width:150px" placeholder="Buscar..." oninput="filCli.q=this.value;renderClientes()">
           <button class="btn btn-primary" onclick="abrirModalCliente(false)">+ Nuevo cliente</button>
         </div>
       </div>
       <table>
-        <thead><tr><th>Cliente</th><th>Plan</th><th>Monto</th><th>Rentabilidad</th><th>Inicio</th><th>Vencimiento</th><th>Tipo pago</th><th>Estado</th><th></th></tr></thead>
+        <thead><tr>
+          <th class="sort" onclick="sortCli('nombre')">Cliente ⇅</th>
+          <th class="sort" onclick="sortCli('plan')">Plan ⇅</th>
+          <th class="sort" onclick="sortCli('monto')">Monto ⇅</th>
+          <th class="sort" onclick="sortCli('rentabilidad')">Rentabilidad ⇅</th>
+          <th class="sort" onclick="sortCli('fecha_inicio')">Inicio ⇅</th>
+          <th>Tipo pago</th>
+          <th class="sort" onclick="sortCli('estado')">Estado ⇅</th>
+          <th></th>
+        </tr></thead>
         <tbody id="tbody-clientes"></tbody>
       </table>
     </div>
@@ -771,7 +792,7 @@ let clis=[],leads=[],rens=[],metasData=[];
 let leadEdit=null,leadConv=null,leadPerdido=null,leadPerdidoEtapaAnterior=null;
 let cliEdit=null,renEdit=null,renClienteId=null,renClienteNombre=null,comLeadId=null;
 let filRes={q:'',renovacion:''};
-let filCli={q:''};
+let filCli={q:'',renovacion:'',sort:{col:'nombre',dir:'asc'}};
 let filLeads={q:'',fuente:'',etapa:'',mes:'',sort:{col:'fecha',dir:'desc'}};
 let filRen={q:'',estado:'',frecuencia:''};
 let renPostergando=null;
@@ -826,6 +847,8 @@ async function cargarResumen(){
   try{
     const [res,cl]=await Promise.all([fetch(`${API}/resumen`).then(r=>r.json()),fetch(`${API}/clientes`).then(r=>r.json())]);
     clis=Array.isArray(cl)?cl:[];
+    // Cargar renovaciones para filtro
+    fetch(`${API}/renovaciones`).then(r=>r.json()).then(d=>{window._rensClientes=Array.isArray(d)?d:[];});
     document.getElementById('kpi-resumen').innerHTML=`
       <div class="kpi"><div class="kpi-label">Clientes activos</div><div class="kpi-valor">${res.clientes_activos}</div><div class="kpi-sub info">Total cartera</div></div>
       <div class="kpi"><div class="kpi-label">Ingresos del mes</div><div class="kpi-valor" style="font-size:18px">$${fmt(res.ingresos_mes)}</div><div class="kpi-sub ok">Facturación</div></div>
@@ -858,6 +881,12 @@ function renderResumen(){
 }
 
 // ── CLIENTES ──
+  function sortCli(col){
+    const s=filCli.sort;
+    if(s.col===col) s.dir=s.dir==='asc'?'desc':'asc';
+    else{s.col=col;s.dir='asc';}
+    renderClientes();
+  }
 async function cargarClientes(){
   try{
     const cl=await fetch(`${API}/clientes`).then(r=>r.json());
@@ -896,6 +925,19 @@ function renderClientes(){
   if(pago)data=data.filter(c=>c.tipo_pago===pago);
   if(estado)data=data.filter(c=>c.estado===estado);
   if(filCli.q)data=data.filter(c=>c.nombre.toLowerCase().includes(filCli.q.toLowerCase()));
+  const s=filCli.sort;
+  data.sort((a,b)=>{
+    const va=a[s.col]||''; const vb=b[s.col]||'';
+    if(typeof va==='number') return s.dir==='asc'?va-vb:vb-va;
+    return s.dir==='asc'?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+  });
+  if(filCli.renovacion){
+    const mesAct=mesActual();
+    const rensData=window._rensClientes||[];
+    const cidsRenovados=new Set(rensData.filter(r=>r.mes===mesAct.split('-')[0]&&r.anio===('20'+mesAct.split('-')[1])&&r.estado==='renovado').map(r=>r.id_cliente));
+    if(filCli.renovacion==='renovado') data=data.filter(c=>cidsRenovados.has(c.id));
+    else data=data.filter(c=>!cidsRenovados.has(c.id)&&c.estado!=='perdido');
+  }
   const activosFil=data.filter(c=>c.estado!=='perdido');
   const perdidosFil=data.filter(c=>c.estado==='perdido');
   const noContestaFil=data.filter(c=>c.estado==='no contesta');
@@ -917,9 +959,10 @@ function renderClientes(){
     <td>Día ${c.dia_vencimiento} <span style="color:#888;font-size:10px">(${c.dias_vencimiento}d)</span></td>
     <td><span class="tag ${c.tipo_pago==='factura'?'tag-verde':'tag-gris'}">${c.tipo_pago==='factura'?'Factura':'Sin factura'}</span></td>
     <td>
-      <select class="sel" style="font-size:11px" onchange="cambiarEstadoCliente('${c.id}',this.value)">
+      <select class="sel" style="font-size:11px" onchange="cambiarEstadoCliente('${c.id}',this.value,this)">
         ${cfg.estados.map(e=>`<option value="${e}" ${(c.estado||'activo')===e?'selected':''}>${e.charAt(0).toUpperCase()+e.slice(1)}</option>`).join('')}
       </select>
+      ${c.estado==='otro'?`<input class="inp" style="font-size:11px;margin-top:4px;width:100%" placeholder="Especificar..." value="${c.otro_detalle||''}" onblur="guardarOtroDetalle('${c.id}',this.value)">`:''}
     </td>
     <td><button class="btn btn-outline btn-sm" onclick="verDetalle('${c.id}')">Detalle</button></td>
   </tr>`).join('');
@@ -1795,13 +1838,21 @@ async function confirmarPostergacion(){
 }
 
 
-async function cambiarEstadoCliente(id,estado){
+async function cambiarEstadoCliente(id,estado,sel){
   try{
     const data={estado};
     if(estado==='perdido') data.fecha_perdido=hoy();
     await fetch(`${API}/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     toast('Estado actualizado ✓');
-    cargarClientes();
+    await cargarClientes();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function guardarOtroDetalle(id,texto){
+  if(!texto.trim()) return;
+  try{
+    await fetch(`${API}/clientes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({otro_detalle:texto})});
+    toast('Detalle guardado ✓');
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
