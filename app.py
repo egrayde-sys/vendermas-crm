@@ -235,6 +235,8 @@ def actualizar_cliente(cid):
         for i, row in enumerate(rows[1:], start=2):
             if row[0] == cid:
                 d = request.json
+                print(f'Headers: {headers}')
+                print(f'Data recibida: {d}')
                 for campo, header in campo_map.items():
                     if campo in d and header in headers:
                         ws.update_cell(i, headers.index(header)+1, d[campo])
