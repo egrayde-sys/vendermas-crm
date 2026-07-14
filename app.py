@@ -355,6 +355,10 @@ def get_renovaciones():
                 'telefono': cli.get('Teléfono',''), 'email': cli.get('Email',''),
                 'dias': dias,
             })
+        pendientes = [r for r in result if r.get('factura_pendiente')]
+        print(f'Facturas pendientes: {len(pendientes)}')
+        if pendientes:
+            print(f'Ejemplo: {pendientes[0]}')
         result.sort(key=lambda x: x['fecha_vencimiento'] or '9999')
         return jsonify(result)
     except Exception as e:
