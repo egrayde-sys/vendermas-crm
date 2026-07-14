@@ -222,6 +222,7 @@ tr:hover td{background:#fafffe;}
     <div class="page-titulo">Clientes</div>
     <div class="page-sub">Gestión completa de clientes</div>
     <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px" id="kpi-clientes"></div>
+  <div id="kpi-facturas-pendientes"></div>
     <div class="card">
       <div class="card-header">
         <div class="card-titulo">Listado</div>
@@ -648,6 +649,10 @@ tr:hover td{background:#fafffe;}
       <div class="fg"><label>Monto Ads ($)</label><input id="ren-ads" type="number"></div>
       <div class="fg"><label>N° Factura</label><input id="ren-factura"></div>
       <div class="fg full"><label>Banco</label><select id="ren-banco"></select></div>
+      <div class="fg full" style="flex-direction:row;align-items:center;gap:8px">
+        <input type="checkbox" id="ren-factura-pendiente" style="width:16px;height:16px">
+        <label style="font-size:12px;font-weight:500;color:#555">Factura pendiente por emitir</label>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="cerrarModal('modal-renovacion')">Cancelar</button>
@@ -906,8 +911,22 @@ async function cargarClientes(){
       <div class="kpi"><div class="kpi-label">No contesta</div><div class="kpi-valor">${noContesta}</div><div class="kpi-sub warn">$${fmt(clis.filter(c=>c.estado==='no contesta').reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>c.estado==='no contesta').reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>c.estado==='no contesta').reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
       <div class="kpi"><div class="kpi-label">Postergados</div><div class="kpi-valor">${postergados}</div><div class="kpi-sub warn">$${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
       <div class="kpi"><div class="kpi-label">Otro</div><div class="kpi-valor">${otro}</div><div class="kpi-sub info">$${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
-      <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${perdidos}</div><div class="kpi-sub danger">$${fmt(clis.filter(c=>c.estado==='perdido').reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>c.estado==='perdido').reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>c.estado==='perdido').reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
+      <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${perdidos}</div><div class="kpi-sub danger">Inactivos</div></div>
     `;
+    // Cargar facturas pendientes
+    fetch(`${API}/renovaciones`).then(r=>r.json()).then(rens=>{
+      if(!Array.isArray(rens)) return;
+      const pendientes=rens.filter(r=>r.factura_pendiente==='si'&&r.estado!=='renovado');
+      const montoPend=pendientes.reduce((s,r)=>s+(r.monto||0),0);
+      document.getElementById('kpi-facturas-pendientes').innerHTML=`
+        <div class="kpi" style="border-color:#FFC107;background:#fffdf0">
+          <div class="kpi-label">Facturas por emitir</div>
+          <div class="kpi-valor">${pendientes.length}</div>
+          <div class="kpi-sub warn">$${fmt(montoPend)}</div>
+          ${pendientes.length>0?`<div style="font-size:10px;color:#856600;margin-top:6px">${pendientes.map(r=>r.nombre_cliente).join(', ')}</div>`:''}
+        </div>
+      `;
+    });
     // Poblar filtros
     const planes=[...new Set(clis.map(c=>c.plan))];
     document.getElementById('fil-cli-plan').innerHTML='<option value="">Todos los planes</option>'+planes.map(p=>`<option>${p}</option>`).join('');
@@ -1156,10 +1175,11 @@ function abrirNuevaRenovacion(cid,nombre,monto){
   if(cliData) document.getElementById('ren-ads').value=cliData.inversion_ads||'';
   document.getElementById('ren-factura').value='';
   document.getElementById('ren-banco').value='';
+  document.getElementById('ren-factura-pendiente').checked=false;
   abrirModal('modal-renovacion');
 }
 
-function abrirEditarRenovacion(rid,cid,mes,anio,estado,fecha,fpago,fvenc,monto,comision,ads,factura,banco,frecuencia){
+function abrirEditarRenovacion(rid,cid,mes,anio,estado,fecha,fpago,fvenc,monto,comision,ads,factura,banco,frecuencia,factura_pendiente){
   renEdit=rid;renClienteId=cid;
   document.getElementById('modal-ren-titulo').textContent='Editar renovación';
   document.getElementById('ren-mes').value=mes||'ene';
@@ -1173,6 +1193,7 @@ function abrirEditarRenovacion(rid,cid,mes,anio,estado,fecha,fpago,fvenc,monto,c
   document.getElementById('ren-ads').value=ads||'';
   document.getElementById('ren-factura').value=factura||'';
   document.getElementById('ren-banco').value=banco||'';
+  document.getElementById('ren-factura-pendiente').checked=factura_pendiente==='si';
   // Bloquear campos si está pagado
   const pagado=estado==='renovado';
   ['ren-mes','ren-anio','ren-estado','ren-frecuencia','ren-fvenc','ren-fpago','ren-monto','ren-comision','ren-ads','ren-factura','ren-banco'].forEach(id=>{
@@ -1198,6 +1219,7 @@ async function guardarRenovacion(){
     monto_ads:parseInt(document.getElementById('ren-ads').value)||0,
     factura:document.getElementById('ren-factura').value,
     banco:document.getElementById('ren-banco').value,
+    factura_pendiente:document.getElementById('ren-factura-pendiente').checked?'si':'',
   };
   try{
     if(renEdit){
@@ -1330,7 +1352,7 @@ function renderLeads(){
             <option value="">Cambiar etapa...</option>
             <option value="nuevo">Nuevo</option><option value="contactado">Contactado</option><option value="negociacion">Negociación</option>
           </select>
-          <button class="btn btn-outline btn-sm" onclick="abrirModalLead('${l.id}')">✏️</button>
+          <button class="btn btn-outline btn-sm" onclick="abrirEditarRenovacion('${r.id}','${c.id}','${r.mes}','${r.anio||2026}','${r.estado}','${r.fecha}','${r.fecha_pago}','${r.fecha_vencimiento}',${r.monto||0},${r.comision||0},${r.monto_ads||0},'${r.factura}','${r.banco}','${r.frecuencia||'mensual'}','${r.factura_pendiente||''}')">✏️</button>
           <button class="btn btn-outline btn-sm" onclick="abrirComentario('${l.id}')">💬</button>
         </div>
       </div>`;
