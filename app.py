@@ -360,6 +360,7 @@ def get_renovaciones():
                 'plan': cli.get('Plan',''), 'contacto': cli.get('Contacto',''),
                 'telefono': cli.get('Teléfono',''), 'email': cli.get('Email',''),
                 'dias': dias,
+                'factura_pendiente': r.get('Factura Pendiente',''),
             })
         result.sort(key=lambda x: x['fecha_vencimiento'] or '9999')
         return jsonify(result)
