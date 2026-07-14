@@ -256,7 +256,7 @@ tr:hover td{background:#fafffe;}
         <select class="sel" onchange="filLeads.etapa=this.value;renderLeads()">
           <option value="">Toda etapa</option>
           <option value="nuevo">Nuevo</option><option value="contactado">Contactado</option>
-          <option value="negociacion">Negociación</option><option value="cerrado">Vendido</option><option value="perdido">Perdido</option>
+          <option value="negociacion">Negociación</option><option value="no contesta">No contesta</option><option value="cerrado">Vendido</option><option value="perdido">Perdido</option>
         </select>
         <select class="sel" id="fil-leads-mes" onchange="filLeads.mes=this.value;renderLeads()"><option value="">Todos los meses</option></select>
         <input class="inp" style="width:130px" placeholder="Buscar..." oninput="filLeads.q=this.value;renderLeads()">
@@ -264,7 +264,16 @@ tr:hover td{background:#fafffe;}
       </div>
     </div>
     <table>
-      <thead><tr><th>Empresa</th><th>Contacto</th><th>Plan interés</th><th>Fuente</th><th>Fecha</th><th>Etapa</th><th>Último comentario</th><th></th></tr></thead>
+      <thead><tr>
+        <th class="sort" onclick="sortLeads('nombre')">Empresa ⇅</th>
+        <th>Contacto</th>
+        <th class="sort" onclick="sortLeads('plan_interes')">Plan interés ⇅</th>
+        <th class="sort" onclick="sortLeads('fuente')">Fuente ⇅</th>
+        <th class="sort" onclick="sortLeads('fecha')">Fecha ⇅</th>
+        <th class="sort" onclick="sortLeads('etapa')">Etapa ⇅</th>
+        <th>Último comentario</th>
+        <th></th>
+      </tr></thead>
       <tbody id="tbody-leads"></tbody>
     </table>
   </div>
@@ -763,7 +772,7 @@ let leadEdit=null,leadConv=null,leadPerdido=null,leadPerdidoEtapaAnterior=null;
 let cliEdit=null,renEdit=null,renClienteId=null,renClienteNombre=null,comLeadId=null;
 let filRes={q:'',renovacion:''};
 let filCli={q:''};
-let filLeads={q:'',fuente:'',etapa:'',mes:''};
+let filLeads={q:'',fuente:'',etapa:'',mes:'',sort:{col:'fecha',dir:'desc'}};
 let filRen={q:'',estado:'',frecuencia:''};
 let renPostergando=null;
 let cfg={
@@ -1196,6 +1205,12 @@ async function confirmarReprogramacion(){
 
 
 // ── LEADS ──
+function sortLeads(col){
+  const s=filLeads.sort;
+  if(s.col===col) s.dir=s.dir==='asc'?'desc':'asc';
+  else{s.col=col;s.dir='asc';}
+  renderLeads();
+}
 async function cargarLeads(){
   try{
     const ld=await fetch(`${API}/leads`).then(r=>r.json());
@@ -1253,6 +1268,11 @@ function renderLeads(){
   if(filLeads.etapa)data=data.filter(l=>l.etapa===filLeads.etapa);
   if(filLeads.mes)data=data.filter(l=>mesFechaStr(l.fecha)===filLeads.mes);
   if(filLeads.q)data=data.filter(l=>(l.nombre+l.contacto).toLowerCase().includes(filLeads.q.toLowerCase()));
+  const s=filLeads.sort;
+  data.sort((a,b)=>{
+    const va=a[s.col]||''; const vb=b[s.col]||'';
+    return s.dir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+  });
   document.getElementById('tbody-leads').innerHTML=data.map(l=>{
     const ultComentario=getUltimoComentario(l.comentarios);
     let acciones='';
