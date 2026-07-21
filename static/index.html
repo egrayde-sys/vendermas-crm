@@ -243,7 +243,7 @@ tr:hover td{background:#fafffe;}
             <option value="pendiente">Pendientes este mes</option>
           </select>
           <input class="inp" style="width:150px" placeholder="Buscar..." oninput="filCli.q=this.value;renderClientes()">
-          <button class="btn btn-primary" onclick="abrirModalCliente(false)">+ Nuevo cliente</button>
+          <span id="btn-nuevo-cliente"></span>
         </div>
       </div>
       <table>
@@ -895,6 +895,7 @@ function renderResumen(){
 async function cargarClientes(){
   try{
     const cl=await fetch(`${API}/clientes`).then(r=>r.json());
+    document.getElementById('btn-nuevo-cliente').innerHTML=tienePermiso('crear_clientes')?'<button class="btn btn-primary" onclick="abrirModalCliente(false)">+ Nuevo cliente</button>':'';
     clis=Array.isArray(cl)?cl:[];
     fetch(`${API}/renovaciones`).then(r=>r.json()).then(d=>{window._rensClientes=Array.isArray(d)?d:[];});
     const activos=clis.filter(c=>c.estado!=='perdido').length;
@@ -1037,7 +1038,7 @@ async function verDetalle(id){
           <div style="font-size:22px;font-weight:700">${c.nombre}</div>
           <div style="font-size:12px;color:#888;margin-top:4px">${c.rubro||''} · <span class="tag tag-blue">${c.plan}</span> · ${estadoTag(c.estado||'activo')}</div>
         </div>
-        <button class="btn btn-outline" onclick="abrirEditarCliente('${c.id}')">✏️ Editar</button>
+        ${tienePermiso('editar_clientes')?`<button class="btn btn-outline" onclick="abrirEditarCliente('${c.id}')">✏️ Editar</button>`:''}
       </div>
       <div class="det-grid">
         <div class="det-card">
@@ -2377,10 +2378,12 @@ async function cargarConfig(){
 }
 
 function renderConfig(){
+  const puedeEditar=tienePermiso('todos');
   Object.keys(cfg).forEach(key=>{
     const el=document.getElementById('cfg-'+key);
-    if(el)el.innerHTML=cfg[key].map(v=>`<div class="cfg-tag"><span>${v}</span><button onclick="removeCfg('${key}','${v}')">×</button></div>`).join('');
+    if(el)el.innerHTML=cfg[key].map(v=>`<div class="cfg-tag"><span>${v}</span>${puedeEditar?`<button onclick="removeCfg('${key}','${v}')">×</button>`:''}</div>`).join('');
   });
+  document.querySelectorAll('.cfg-add').forEach(el=>el.style.display=puedeEditar?'flex':'none');
 }
 
 async function addCfg(key,inpId,elId){
@@ -2560,6 +2563,7 @@ async function hacerLogin(){
       body:JSON.stringify({usuario,password})});
     const data=await res.json();
     if(data.ok){
+      window._permisos = data.permisos || '';
       document.getElementById('login-page').style.display='none';
       document.getElementById('login-err').style.display='none';
       cargarConfig();
@@ -2577,6 +2581,12 @@ async function cerrarSesion(){
   document.getElementById('login-page').style.display='flex';
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
+}
+
+function tienePermiso(p){
+  if(!window._permisos) return false;
+  if(window._permisos==='todos') return true;
+  return window._permisos.split(',').includes(p);
 }
 
 // Init
