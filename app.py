@@ -88,6 +88,11 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 
+def tiene_permiso(permiso):
+    permisos = session.get('permisos','')
+    if permisos == 'todos': return True
+    return permiso in permisos.split(',')
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -107,7 +112,9 @@ def login():
                 session['logged_in'] = True
                 session['usuario'] = d.get('usuario','')
                 session['rol'] = u.get('Rol','ejecutiva')
-                return jsonify({'ok': True, 'rol': u.get('Rol','ejecutiva')})
+                permisos = u.get('Permisos','').strip()
+                session['permisos'] = permisos
+                return jsonify({'ok': True, 'rol': u.get('Rol','ejecutiva'), 'permisos': permisos})
         return jsonify({'error': 'Credenciales incorrectas'}), 401
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -208,6 +215,8 @@ def get_cliente(cid):
 @app.route('/api/clientes', methods=['POST'])
 @login_required
 def crear_cliente():
+    if not tiene_permiso('crear_clientes'):
+        return jsonify({'error': 'Sin permiso'}), 403
     try:
         sh = get_sheet()
         ws = sh.worksheet('Clientes')
@@ -227,6 +236,8 @@ def crear_cliente():
 @app.route('/api/clientes/<cid>', methods=['PUT'])
 @login_required
 def actualizar_cliente(cid):
+    if not tiene_permiso('crear_clientes'):
+        return jsonify({'error': 'Sin permiso'}), 403
     try:
         sh = get_sheet()
         ws = sh.worksheet('Clientes')
@@ -277,6 +288,8 @@ def get_leads():
 @app.route('/api/leads', methods=['POST'])
 @login_required
 def crear_lead():
+    if not tiene_permiso('crear_clientes'):
+        return jsonify({'error': 'Sin permiso'}), 403
     try:
         sh = get_sheet()
         ws = sh.worksheet('Leads')
@@ -294,6 +307,8 @@ def crear_lead():
 @app.route('/api/leads/<lid>', methods=['PUT'])
 @login_required
 def actualizar_lead(lid):
+    if not tiene_permiso('crear_clientes'):
+        return jsonify({'error': 'Sin permiso'}), 403
     try:
         sh = get_sheet()
         ws = sh.worksheet('Leads')
@@ -526,6 +541,8 @@ def get_metas():
 @app.route('/api/metas', methods=['POST'])
 @login_required
 def crear_meta():
+    if not tiene_permiso('crear_clientes'):
+        return jsonify({'error': 'Sin permiso'}), 403
     try:
         sh = get_sheet()
         ws = sh.worksheet('Metas')
