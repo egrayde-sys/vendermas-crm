@@ -2132,7 +2132,9 @@ async function cargarVentas(){
       const key=`${r.anio||'2026'}-${r.mes}`;
       if(!porMes[key]) porMes[key]={mes:r.mes,anio:r.anio||'2026',key,count:0,monto:0,comision:0,ads:0,factura:0,negro:0,items:[]};
       const cli=cliDict[r.id_cliente]||{};
-      porMes[key].count++;
+      if(!porMes[key].clientes) porMes[key].clientes=new Set();
+        porMes[key].clientes.add(r.id_cliente);
+        porMes[key].count=porMes[key].clientes.size;
       porMes[key].monto+=r.monto||0;
       porMes[key].comision+=r.comision||0;
       porMes[key].ads+=r.monto_ads||0;
