@@ -1004,6 +1004,107 @@ def debug_ren():
     idx = headers.index('Factura Pendiente') if 'Factura Pendiente' in headers else -1
     return jsonify({'col_idx': idx, 'headers': headers, 'sample': [r[idx] for r in rows[1:5] if idx != -1]})
 
+@app.route('/api/comisiones')
+@login_required
+def get_comisiones():
+    try:
+        sh = get_sheet()
+        ren_rows = sheet_to_dicts(sh.worksheet('Renovaciones'))
+        cli_rows = sheet_to_dicts(sh.worksheet('Clientes'))
+        cfg_rows = sheet_to_dicts(sh.worksheet('Configuración'))
+        cli_dict = {c.get('ID',''):c for c in cli_rows}
+        
+        # Leer configuración de comisiones
+        cfg_com = {}
+        for r in cfg_rows:
+            cat = r.get('Categoria','').strip()
+            val = r.get('Valor','').strip()
+            if cat.startswith('comision_') or cat.startswith('bono_'):
+                try: cfg_com[cat] = float(val)
+                except: pass
+        
+        pct_ren   = cfg_com.get('comision_renovacion', 5) / 100
+        pct_nuevo = cfg_com.get('comision_nuevo', 25) / 100
+        
+        # Solo renovaciones pagadas
+        result = []
+        for r in ren_rows:
+            if r.get('Estado','') != 'renovado': continue
+            cid = r.get('ID Cliente','')
+            cli = cli_dict.get(cid, {})
+            tipo = r.get('Tipo','renovacion').strip() or 'renovacion'
+            comision_base = parse_int(r.get('Comisión', 0))
+            monto = parse_int(r.get('Valor Campaña', 0))
+            pct = pct_nuevo if tipo == 'nuevo' else pct_ren
+            comision_ejecutiva = round(comision_base * pct)
+            result.append({
+                'id': r.get('ID',''),
+                'id_cliente': cid,
+                'nombre_cliente': r.get('Nombre Cliente','') or cli.get('Nombre',''),
+                'mes': r.get('Mes',''),
+                'anio': r.get('Año',''),
+                'tipo': tipo,
+                'monto': monto,
+                'comision_base': comision_base,
+                'comision_ejecutiva': comision_ejecutiva,
+                'comision_pagada': r.get('Comision Pagada',''),
+                'plan': cli.get('Plan',''),
+            })
+        
+        # Calcular totales y bono
+        pendientes = [r for r in result if r['comision_pagada'] != 'si']
+        monto_total = sum(r['monto'] for r in pendientes)
+        comision_total = sum(r['comision_ejecutiva'] for r in pendientes)
+        
+        # Calcular bono por tramos
+        bono = 0
+        tramos = sorted([k for k in cfg_com if k.startswith('bono_tramo') and k.endswith('_min')])
+        for t in tramos:
+            num = t.replace('bono_tramo','').replace('_min','')
+            t_min = cfg_com.get(f'bono_tramo{num}_min', 0)
+            t_max = cfg_com.get(f'bono_tramo{num}_max', 0)
+            t_monto = cfg_com.get(f'bono_tramo{num}_monto', 0)
+            if t_min <= monto_total <= t_max:
+                bono = t_monto
+                break
+        
+        return jsonify({
+            'items': result,
+            'resumen': {
+                'total_pendientes': len(pendientes),
+                'monto_total': monto_total,
+                'comision_total': comision_total,
+                'bono': bono,
+                'total_a_pagar': comision_total + bono,
+            },
+            'config': {
+                'pct_renovacion': cfg_com.get('comision_renovacion', 5),
+                'pct_nuevo': cfg_com.get('comision_nuevo', 25),
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/comisiones/pagar', methods=['POST'])
+@login_required
+def pagar_comisiones():
+    try:
+        sh = get_sheet()
+        ws = sh.worksheet('Renovaciones')
+        rows = ws.get_all_values()
+        headers = rows[0]
+        d = request.json
+        ids = d.get('ids', [])
+        if 'Comision Pagada' not in headers:
+            return jsonify({'error': 'Columna Comision Pagada no existe'}), 400
+        col_idx = headers.index('Comision Pagada') + 1
+        for i, row in enumerate(rows[1:], start=2):
+            if row[0] in ids:
+                ws.update_cell(i, col_idx, 'si')
+        return jsonify({'ok': True, 'procesados': len(ids)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
     app.run(debug=True, port=5001)
