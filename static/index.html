@@ -958,8 +958,10 @@ async function cargarClientes(){
     const cl=await fetch(`${API}/clientes`).then(r=>r.json());
     document.getElementById('btn-nuevo-cliente').innerHTML=tienePermiso('crear_clientes')?'<button class="btn btn-primary" onclick="abrirModalCliente(false)">+ Nuevo cliente</button>':'';
     clis=Array.isArray(cl)?cl:[];
-    const rensData=await fetch(`${API}/renovaciones`).then(r=>r.json());
-    window._rensClientes=Array.isArray(rensData)?rensData:[];
+    try{
+      const rensData=await fetch(`${API}/renovaciones`).then(r=>r.json());
+      window._rensClientes=Array.isArray(rensData)?rensData:[];
+    }catch(e){ window._rensClientes=[]; }
     const activos=clis.filter(c=>c.estado!=='perdido').length;
     const noContesta=clis.filter(c=>c.estado==='no contesta').length;
     const postergados=clis.filter(c=>c.estado==='postergado').length;
