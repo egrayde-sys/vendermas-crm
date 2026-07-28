@@ -226,8 +226,8 @@ tr:hover td{background:#fafffe;}
   <div id="cli-lista">
     <div class="page-titulo">Clientes</div>
     <div class="page-sub">Gestión completa de clientes</div>
-    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px" id="kpi-clientes"></div>
-  <div id="kpi-facturas-pendientes"></div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(6,1fr);margin-bottom:16px" id="kpi-clientes"></div>
+    <div id="kpi-facturas-pendientes"></div>
     <div class="card">
       <div class="card-header">
         <div class="card-titulo">Listado</div>
@@ -614,6 +614,7 @@ tr:hover td{background:#fafffe;}
   <div class="cfg-section"><div class="cfg-titulo">Estados de cliente</div><div class="cfg-tags" id="cfg-estados"></div><div class="cfg-add"><input id="inp-estado" placeholder="Nuevo estado..."><button class="btn btn-primary" onclick="addCfg('estados','inp-estado','cfg-estados')">+ Agregar</button></div></div>
   <div class="cfg-section"><div class="cfg-titulo">Motivos de rechazo</div><div class="cfg-tags" id="cfg-motivos"></div><div class="cfg-add"><input id="inp-motivo" placeholder="Nuevo motivo..."><button class="btn btn-primary" onclick="addCfg('motivos','inp-motivo','cfg-motivos')">+ Agregar</button></div></div>
   <div class="cfg-section"><div class="cfg-titulo">Bancos</div><div class="cfg-tags" id="cfg-bancos"></div><div class="cfg-add"><input id="inp-banco" placeholder="Nuevo banco..."><button class="btn btn-primary" onclick="addCfg('bancos','inp-banco','cfg-bancos')">+ Agregar</button></div></div>
+  <div class="cfg-section"><div class="cfg-titulo">Comisiones ejecutiva</div><div id="cfg-comisiones"></div></div>
 </div>
 
 </div><!-- /main -->
@@ -2130,7 +2131,7 @@ function renderCalendario(){
     const fecha=new Date(anio,mes,d);
     const diaStr=fecha.toISOString().split('T')[0];
     const esHoy=fecha.getTime()===hoy.getTime();
-    const leadsDelDia=leads.filter(l=>l.fecha_proximo_contacto===diaStr&&l.etapa!=='cerrado'&&l.etapa!=='perdido');
+    const leadsDelDia=leads.filter(l=>l.fecha_proximo_contacto===diaStr&&['nuevo','contactado','negociacion'].includes(l.etapa));
     const col=document.createElement('div');
     col.style.cssText=`background:white;border-radius:10px;border:1px solid ${esHoy?'#185FA5':'#ececec'};min-height:80px;padding:8px;`;
     col.innerHTML=`
@@ -2578,6 +2579,12 @@ function renderConfig(){
     if(el)el.innerHTML=cfg[key].map(v=>`<div class="cfg-tag"><span>${v}</span>${puedeEditar?`<button onclick="removeCfg('${key}','${v}')">×</button>`:''}</div>`).join('');
   });
   document.querySelectorAll('.cfg-add').forEach(el=>el.style.display=puedeEditar?'flex':'none');
+  // Comisiones
+  const elCom=document.getElementById('cfg-comisiones');
+  if(elCom) elCom.innerHTML=`
+    <div class="det-row"><span class="det-k">% Renovación</span><span class="det-v">${cfg.comision_renovacion?.[0]||'5'}%</span></div>
+    <div class="det-row"><span class="det-k">% Cliente nuevo</span><span class="det-v">${cfg.comision_nuevo?.[0]||'25'}%</span></div>
+  `;
 }
 
 async function addCfg(key,inpId,elId){
