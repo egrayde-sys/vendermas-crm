@@ -181,6 +181,10 @@ tr:hover td{background:#fafffe;}
     <div class="nav-item" onclick="nav('googleads',this)">📈 Google Ads</div>
     <div class="nav-item" onclick="nav('variacion-ads',this)">📉 Variación Ads</div>
   </div>
+    <div class="nav-section">
+    <div class="nav-label">Comisiones</div>
+    <div class="nav-item" onclick="nav('comisiones',this)">💵 Comisiones</div>
+  </div>
   <div class="nav-section">
     <div class="nav-label">Configuración</div>
     <div class="nav-item" onclick="nav('config',this)">⚙️ Configuración</div>
@@ -543,6 +547,42 @@ tr:hover td{background:#fafffe;}
   </div>
 </div>
 
+<!-- COMISIONES -->
+<div class="page" id="page-comisiones">
+  <div class="page-titulo">Comisiones ejecutiva</div>
+  <div class="page-sub">Comisiones pendientes de pago</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px" id="kpi-comisiones"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Renovaciones y captaciones</div>
+      <div class="card-acciones">
+        <select class="sel" onchange="filCom.tipo=this.value;renderComisiones()">
+          <option value="">Todo tipo</option>
+          <option value="renovacion">Renovaciones</option>
+          <option value="nuevo">Clientes nuevos</option>
+        </select>
+        <select class="sel" onchange="filCom.mes=this.value;renderComisiones()">
+          <option value="">Todos los meses</option>
+        </select>
+        <select class="sel" onchange="filCom.estado=this.value;renderComisiones()">
+          <option value="">Todos</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="pagado">Pagados</option>
+        </select>
+        <button class="btn btn-primary" onclick="procesarComisiones()">✓ Procesar seleccionados</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr>
+        <th><input type="checkbox" id="chk-all-com" onchange="toggleAllCom(this)"></th>
+        <th>Cliente</th><th>Mes</th><th>Tipo</th><th>Plan</th>
+        <th>Monto</th><th>Comisión base</th><th>Comisión ejecutiva</th><th>Estado</th>
+      </tr></thead>
+      <tbody id="tbody-comisiones"></tbody>
+    </table>
+  </div>
+</div>
+
 <!-- CONFIG -->
 <div class="page" id="page-config">
   <div class="page-titulo">Configuración</div>
@@ -831,7 +871,7 @@ function sincSelects(){
   poblar('cv-plan',cfg.planes);poblar('cv-pago',cfg.pagos);
   poblar('sel-motivo',cfg.motivos);
 }
-const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),'variacion-ads':()=>cargarVariacionAds(),config:()=>renderConfig()};
+const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),'variacion-ads':()=>cargarVariacionAds(),comisiones:()=>cargarComisiones(),config:()=>renderConfig()};
 function nav(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -2361,6 +2401,66 @@ async function cargarVariacionAds(){
   }catch(e){
     document.getElementById('kpi-variacion').innerHTML=`<div style="color:#A32D2D;grid-column:span 3;padding:20px">Error: ${e.message}</div>`;
   }
+}
+
+// ── COMISIONES ──
+let comisionesData=[];
+let filCom={tipo:'',mes:'',estado:'pendiente'};
+
+async function cargarComisiones(){
+  try{
+    const data=await fetch(`${API}/comisiones`).then(r=>r.json());
+    if(data.error) throw new Error(data.error);
+    comisionesData=data.items||[];
+    const res=data.resumen||{};
+    const cfg=data.config||{};
+    document.getElementById('kpi-comisiones').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-valor">${res.total_pendientes||0}</div><div class="kpi-sub warn">Sin pagar</div></div>
+      <div class="kpi"><div class="kpi-label">Monto total</div><div class="kpi-valor" style="font-size:16px">$${fmt(res.monto_total||0)}</div><div class="kpi-sub info">Base cálculo</div></div>
+      <div class="kpi"><div class="kpi-label">Comisión total</div><div class="kpi-valor" style="font-size:16px">$${fmt(res.comision_total||0)}</div><div class="kpi-sub ok">Pendiente pago</div></div>
+      <div class="kpi"><div class="kpi-label">Bono extra</div><div class="kpi-valor" style="font-size:16px">$${fmt(res.bono||0)}</div><div class="kpi-sub ok">Por tramo</div></div>
+      <div class="kpi"><div class="kpi-label">Total a pagar</div><div class="kpi-valor" style="font-size:18px;color:#3B6D11">$${fmt(res.total_a_pagar||0)}</div><div class="kpi-sub ok">Comisión + Bono</div></div>
+    `;
+    // Poblar filtro meses
+    const meses=[...new Set(comisionesData.map(c=>`${c.mes}-${c.anio}`))].sort();
+    const selMes=document.querySelectorAll('#page-comisiones .sel')[1];
+    selMes.innerHTML='<option value="">Todos los meses</option>'+meses.map(m=>`<option value="${m}">${m}</option>`).join('');
+    renderComisiones();
+  }catch(e){console.error('Error comisiones:',e);}
+}
+
+function renderComisiones(){
+  let data=[...comisionesData];
+  if(filCom.tipo) data=data.filter(c=>c.tipo===filCom.tipo);
+  if(filCom.mes) data=data.filter(c=>`${c.mes}-${c.anio}`===filCom.mes);
+  if(filCom.estado==='pendiente') data=data.filter(c=>c.comision_pagada!=='si');
+  if(filCom.estado==='pagado') data=data.filter(c=>c.comision_pagada==='si');
+  document.getElementById('tbody-comisiones').innerHTML=data.map(c=>`<tr>
+    <td><input type="checkbox" class="chk-com" value="${c.id}" ${c.comision_pagada==='si'?'disabled':''}></td>
+    <td><strong>${c.nombre_cliente}</strong></td>
+    <td>${c.mes} ${c.anio}</td>
+    <td><span class="tag ${c.tipo==='nuevo'?'tag-verde':'tag-blue'}">${c.tipo==='nuevo'?'Cliente nuevo':'Renovación'}</span></td>
+    <td><span class="tag tag-blue">${c.plan||'-'}</span></td>
+    <td>$${fmt(c.monto)}</td>
+    <td>$${fmt(c.comision_base)}</td>
+    <td><strong>$${fmt(c.comision_ejecutiva)}</strong></td>
+    <td>${c.comision_pagada==='si'?'<span class="tag tag-verde">Pagado</span>':'<span class="tag tag-amarillo">Pendiente</span>'}</td>
+  </tr>`).join('');
+}
+
+function toggleAllCom(chk){
+  document.querySelectorAll('.chk-com:not([disabled])').forEach(c=>c.checked=chk.checked);
+}
+
+async function procesarComisiones(){
+  const ids=[...document.querySelectorAll('.chk-com:checked')].map(c=>c.value);
+  if(!ids.length){toast('Selecciona al menos una comisión','error');return;}
+  if(!confirm(`¿Marcar ${ids.length} comisión(es) como pagadas?`)) return;
+  try{
+    await fetch(`${API}/comisiones/pagar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});
+    toast(`✓ ${ids.length} comisiones procesadas`);
+    cargarComisiones();
+  }catch(e){toast('Error: '+e.message,'error');}
 }
 
 // ── CONFIG ──
