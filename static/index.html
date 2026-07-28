@@ -184,6 +184,7 @@ tr:hover td{background:#fafffe;}
     <div class="nav-section">
     <div class="nav-label">Comisiones</div>
     <div class="nav-item" onclick="nav('comisiones',this)">💵 Comisiones</div>
+    <div class="nav-item" onclick="nav('historial-com',this)">📋 Historial comisiones</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Configuración</div>
@@ -585,6 +586,23 @@ tr:hover td{background:#fafffe;}
   </div>
 </div>
 
+<!-- HISTORIAL COMISIONES -->
+<div class="page" id="page-historial-com">
+  <div class="page-titulo">Historial de comisiones</div>
+  <div class="page-sub">Comisiones pagadas por mes</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px" id="kpi-hist-com"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-titulo">Por mes</div>
+      <select class="sel" onchange="filHistCom=this.value;renderHistorialCom()"><option value="">Todos los meses</option></select>
+    </div>
+    <table>
+      <thead><tr><th>Mes</th><th>Renovaciones pagadas</th><th>Captaciones pagadas</th><th>Com. renovaciones</th><th>Com. captaciones</th><th>Total comisión</th></tr></thead>
+      <tbody id="tbody-hist-com"></tbody>
+    </table>
+  </div>
+</div>
+
 <!-- CONFIG -->
 <div class="page" id="page-config">
   <div class="page-titulo">Configuración</div>
@@ -873,7 +891,7 @@ function sincSelects(){
   poblar('cv-plan',cfg.planes);poblar('cv-pago',cfg.pagos);
   poblar('sel-motivo',cfg.motivos);
 }
-const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),'variacion-ads':()=>cargarVariacionAds(),comisiones:()=>cargarComisiones(),config:()=>renderConfig()};
+const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),'variacion-ads':()=>cargarVariacionAds(),'historial-com':()=>cargarHistorialCom(),comisiones:()=>cargarComisiones(),config:()=>renderConfig()};
 function nav(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -2438,8 +2456,9 @@ function renderComisiones(){
   if(filCom.mes) data=data.filter(c=>`${c.mes}-${c.anio}`===filCom.mes);
   if(filCom.estado==='pendiente') data=data.filter(c=>c.comision_pagada!=='si');
   if(filCom.estado==='pagado') data=data.filter(c=>c.comision_pagada==='si');
+  actualizarKpiSeleccionados();
   document.getElementById('tbody-comisiones').innerHTML=data.map(c=>`<tr>
-    <td><input type="checkbox" class="chk-com" value="${c.id}" ${c.comision_pagada==='si'?'disabled':''}></td>
+    <td><input type="checkbox" class="chk-com" value="${c.id}" ${c.comision_pagada==='si'?'disabled':''} onchange="actualizarKpiSeleccionados()"></td>
     <td><strong>${c.nombre_cliente}</strong></td>
     <td>${c.mes} ${c.anio}</td>
     <td><span class="tag ${c.tipo==='nuevo'?'tag-verde':'tag-blue'}">${c.tipo==='nuevo'?'Cliente nuevo':'Renovación'}</span></td>
@@ -2453,6 +2472,7 @@ function renderComisiones(){
 
 function toggleAllCom(chk){
   document.querySelectorAll('.chk-com:not([disabled])').forEach(c=>c.checked=chk.checked);
+  actualizarKpiSeleccionados();
 }
 
 async function procesarComisiones(){
@@ -2464,6 +2484,66 @@ async function procesarComisiones(){
     toast(`✓ ${ids.length} comisiones procesadas`);
     cargarComisiones();
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+function actualizarKpiSeleccionados(){
+  const selIds=new Set([...document.querySelectorAll('.chk-com:checked')].map(c=>c.value));
+  const sel=comisionesData.filter(c=>selIds.has(c.id));
+  const montoSel=sel.reduce((s,c)=>s+(c.monto||0),0);
+  const comRen=sel.filter(c=>c.tipo==='renovacion').reduce((s,c)=>s+(c.comision_ejecutiva||0),0);
+  const comNuev=sel.filter(c=>c.tipo==='nuevo').reduce((s,c)=>s+(c.comision_ejecutiva||0),0);
+  const comTotal=comRen+comNuev;
+  document.getElementById('kpi-comisiones-sel').innerHTML=`
+    <div class="kpi" style="border-color:#185FA5"><div class="kpi-label">Seleccionados</div><div class="kpi-valor">${sel.length}</div><div class="kpi-sub info">Marcados</div></div>
+    <div class="kpi" style="border-color:#185FA5"><div class="kpi-label">Monto total</div><div class="kpi-valor" style="font-size:14px">$${fmt(montoSel)}</div><div class="kpi-sub info">Base cálculo</div></div>
+    <div class="kpi" style="border-color:#185FA5"><div class="kpi-label">Com. renovaciones</div><div class="kpi-valor" style="font-size:14px">$${fmt(comRen)}</div><div class="kpi-sub ok">Seleccionados</div></div>
+    <div class="kpi" style="border-color:#185FA5"><div class="kpi-label">Com. captaciones</div><div class="kpi-valor" style="font-size:14px">$${fmt(comNuev)}</div><div class="kpi-sub ok">Seleccionados</div></div>
+    <div class="kpi" style="border-color:#185FA5"><div class="kpi-label">Comisión total</div><div class="kpi-valor" style="font-size:16px">$${fmt(comTotal)}</div><div class="kpi-sub ok">A pagar</div></div>
+    <div class="kpi" style="border-color:#185FA5"><div class="kpi-label">Total a pagar</div><div class="kpi-valor" style="font-size:18px;color:#185FA5">$${fmt(comTotal)}</div><div class="kpi-sub info">Sin bono aún</div></div>
+  `;
+}
+
+// ── HISTORIAL COMISIONES ──
+let filHistCom='';
+
+async function cargarHistorialCom(){
+  try{
+    const data=await fetch(`${API}/comisiones`).then(r=>r.json());
+    const pagadas=(data.items||[]).filter(c=>c.comision_pagada==='si');
+    const porMes={};
+    pagadas.forEach(c=>{
+      const key=`${c.anio}-${c.mes}`;
+      if(!porMes[key]) porMes[key]={mes:c.mes,anio:c.anio,key,ren:0,nuevo:0,comRen:0,comNuev:0};
+      if(c.tipo==='nuevo'){porMes[key].nuevo++;porMes[key].comNuev+=c.comision_ejecutiva||0;}
+      else{porMes[key].ren++;porMes[key].comRen+=c.comision_ejecutiva||0;}
+    });
+    const meses=Object.values(porMes).sort((a,b)=>b.key.localeCompare(a.key));
+    const totalPagado=meses.reduce((s,m)=>s+m.comRen+m.comNuev,0);
+    const totalRen=meses.reduce((s,m)=>s+m.comRen,0);
+    const totalNuev=meses.reduce((s,m)=>s+m.comNuev,0);
+    document.getElementById('kpi-hist-com').innerHTML=`
+      <div class="kpi"><div class="kpi-label">Meses con pago</div><div class="kpi-valor">${meses.length}</div><div class="kpi-sub info">Histórico</div></div>
+      <div class="kpi"><div class="kpi-label">Total pagado</div><div class="kpi-valor" style="font-size:16px">$${fmt(totalPagado)}</div><div class="kpi-sub ok">Acumulado</div></div>
+      <div class="kpi"><div class="kpi-label">Com. renovaciones</div><div class="kpi-valor" style="font-size:16px">$${fmt(totalRen)}</div><div class="kpi-sub ok">Acumulado</div></div>
+      <div class="kpi"><div class="kpi-label">Com. captaciones</div><div class="kpi-valor" style="font-size:16px">$${fmt(totalNuev)}</div><div class="kpi-sub ok">Acumulado</div></div>
+    `;
+    const sel=document.querySelector('#page-historial-com .sel');
+    sel.innerHTML='<option value="">Todos los meses</option>'+meses.map(m=>`<option value="${m.key}">${m.mes} ${m.anio}</option>`).join('');
+    window._histComData=meses;
+    renderHistorialCom();
+  }catch(e){console.error('Error historial com:',e);}
+}
+
+function renderHistorialCom(){
+  const data=filHistCom?(window._histComData||[]).filter(m=>m.key===filHistCom):window._histComData||[];
+  document.getElementById('tbody-hist-com').innerHTML=data.map(m=>`<tr>
+    <td><strong>${m.mes} ${m.anio}</strong></td>
+    <td>${m.ren}</td>
+    <td>${m.nuevo}</td>
+    <td>$${fmt(m.comRen)}</td>
+    <td>$${fmt(m.comNuev)}</td>
+    <td><strong>$${fmt(m.comRen+m.comNuev)}</strong></td>
+  </tr>`).join('');
 }
 
 // ── CONFIG ──
