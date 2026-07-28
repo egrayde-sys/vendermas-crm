@@ -964,6 +964,13 @@ async function cargarClientes(){
     const otro=clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).length;
     const perdidos=clis.filter(c=>c.estado==='perdido').length;
     const activosClis=clis.filter(c=>c.estado!=='perdido');
+    const rens=window._rensClientes||[];
+    const mesAct=mesActual();
+    const mesCorto=mesAct.split('-')[0];
+    const anioCorto='20'+mesAct.split('-')[1];
+    const cidsRenovados=new Set(rens.filter(r=>r.mes===mesCorto&&r.anio===anioCorto&&r.estado==='renovado').map(r=>r.id_cliente));
+    const sinRenovar=clis.filter(c=>c.estado!=='perdido'&&!cidsRenovados.has(c.id)).length;
+    const pendientesRenovar=sinRenovar-postergados;
     const totalMonto=activosClis.reduce((s,c)=>s+(c.monto||0),0);
     const totalInv=activosClis.reduce((s,c)=>s+(c.inversion_ads||0),0);
     const totalRent=totalMonto-totalInv;
@@ -973,6 +980,7 @@ async function cargarClientes(){
       <div class="kpi"><div class="kpi-label">Postergados</div><div class="kpi-valor">${postergados}</div><div class="kpi-sub warn">$${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>c.estado==='postergado').reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
       <div class="kpi"><div class="kpi-label">Otro</div><div class="kpi-valor">${otro}</div><div class="kpi-sub info">$${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.monto||0),0))}</div><div style="font-size:10px;color:#888">Inv: $${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.inversion_ads||0),0))} · Rent: $${fmt(clis.filter(c=>!['activo','perdido','no contesta','postergado'].includes(c.estado)).reduce((s,c)=>s+(c.rentabilidad||0),0))}</div></div>
       <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${perdidos}</div><div class="kpi-sub danger">Inactivos</div></div>
+      <div class="kpi" style="border-color:#C45000"><div class="kpi-label">Pendientes renovar</div><div class="kpi-valor" style="color:#C45000">${pendientesRenovar}</div><div class="kpi-sub warn">Sin renovar este mes</div></div>
     `;
     // Cargar facturas pendientes
     fetch(`${API}/renovaciones`).then(r=>r.json()).then(rens=>{
@@ -2649,6 +2657,13 @@ const montoActivos=activos.reduce((s,c)=>s+(c.monto||0),0);
     const montoOtro=otro.reduce((s,c)=>s+(c.monto||0),0);
     const invOtro=otro.reduce((s,c)=>s+(c.inversion_ads||0),0);
     const rentOtro=otro.reduce((s,c)=>s+(c.rentabilidad||0),0);
+    const rensInd=window._rensClientes||[];
+    const mesActInd=mesActual();
+    const mesCortoInd=mesActInd.split('-')[0];
+    const anioCortoInd='20'+mesActInd.split('-')[1];
+    const cidsRenInd=new Set(rensInd.filter(r=>r.mes===mesCortoInd&&r.anio===anioCortoInd&&r.estado==='renovado').map(r=>r.id_cliente));
+    const sinRenovarInd=cliArr.filter(c=>c.estado!=='perdido'&&!cidsRenInd.has(c.id)).length;
+    const pendRenovarInd=sinRenovarInd-postergan.length;
     const montoPerd=perdidos.reduce((s,c)=>s+(c.monto||0),0);
     const invPerd=perdidos.reduce((s,c)=>s+(c.inversion_ads||0),0);
     const rentPerd=perdidos.reduce((s,c)=>s+(c.rentabilidad||0),0);
@@ -2657,6 +2672,7 @@ const montoActivos=activos.reduce((s,c)=>s+(c.monto||0),0);
       <div class="kpi"><div class="kpi-label">No contesta</div><div class="kpi-valor">${noContesta.length}</div><div class="kpi-sub warn">$${fmt(montoNC)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invNC)} · Rent: $${fmt(rentNC)}</div></div>
       <div class="kpi"><div class="kpi-label">Postergados</div><div class="kpi-valor">${postergan.length}</div><div class="kpi-sub warn">$${fmt(montoPost)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invPost)} · Rent: $${fmt(rentPost)}</div></div>
       <div class="kpi"><div class="kpi-label">Otro</div><div class="kpi-valor">${otro.length}</div><div class="kpi-sub info">$${fmt(montoOtro)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invOtro)} · Rent: $${fmt(rentOtro)}</div></div>
+      <div class="kpi" style="border-color:#C45000"><div class="kpi-label">Pendientes renovar</div><div class="kpi-valor" style="color:#C45000">${pendRenovarInd}</div><div class="kpi-sub warn">Sin renovar este mes</div></div>
       <div class="kpi"><div class="kpi-label">Perdidos</div><div class="kpi-valor">${perdidos.length}</div><div class="kpi-sub danger">$${fmt(montoPerd)}</div><div style="font-size:10px;color:#888">Inv: $${fmt(invPerd)} · Rent: $${fmt(rentPerd)}</div></div>
     `;
     const pagos={factura:{count:0,monto:0},negro:{count:0,monto:0}};
