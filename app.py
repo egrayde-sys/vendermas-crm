@@ -83,6 +83,10 @@ def sig_fecha_desde_pago(fecha_pago, freq):
 from functools import wraps
 from flask import session
 
+from datetime import timedelta
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+app.config['SESSION_PERMANENT'] = True
+
 app.secret_key = os.getenv('SECRET_KEY', 'vendermas-secret-2026')
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = True
@@ -109,6 +113,7 @@ def login():
         usuarios = sheet_to_dicts(sh.worksheet('Usuarios'))
         for u in usuarios:
             if u.get('Usuario','').strip() == d.get('usuario','') and u.get('Password','').strip() == d.get('password',''):
+                session.permanent = True
                 session['logged_in'] = True
                 session['usuario'] = d.get('usuario','')
                 session['rol'] = u.get('Rol','ejecutiva')
