@@ -551,7 +551,9 @@ tr:hover td{background:#fafffe;}
 <div class="page" id="page-comisiones">
   <div class="page-titulo">Comisiones ejecutiva</div>
   <div class="page-sub">Comisiones pendientes de pago</div>
-  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px" id="kpi-comisiones"></div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(6,1fr);margin-bottom:8px" id="kpi-comisiones"></div>
+  <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:8px;margin-top:4px">Seleccionados para procesar</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(6,1fr);margin-bottom:16px" id="kpi-comisiones-sel"></div>
   <div class="card">
     <div class="card-header">
       <div class="card-titulo">Renovaciones y captaciones</div>
@@ -2417,7 +2419,8 @@ async function cargarComisiones(){
     document.getElementById('kpi-comisiones').innerHTML=`
       <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-valor">${res.total_pendientes||0}</div><div class="kpi-sub warn">Sin pagar</div></div>
       <div class="kpi"><div class="kpi-label">Monto total</div><div class="kpi-valor" style="font-size:16px">$${fmt(res.monto_total||0)}</div><div class="kpi-sub info">Base cálculo</div></div>
-      <div class="kpi"><div class="kpi-label">Comisión total</div><div class="kpi-valor" style="font-size:16px">$${fmt(res.comision_total||0)}</div><div class="kpi-sub ok">Pendiente pago</div></div>
+      <div class="kpi"><div class="kpi-label">Comisión renovaciones</div><div class="kpi-valor" style="font-size:14px">$${fmt(res.comision_renovaciones||0)}</div><div class="kpi-sub ok">${cfg.pct_renovacion||5}%</div></div>
+      <div class="kpi"><div class="kpi-label">Comisión captaciones</div><div class="kpi-valor" style="font-size:14px">$${fmt(res.comision_nuevos||0)}</div><div class="kpi-sub ok">${cfg.pct_nuevo||25}%</div></div>
       <div class="kpi"><div class="kpi-label">Bono extra</div><div class="kpi-valor" style="font-size:16px">$${fmt(res.bono||0)}</div><div class="kpi-sub ok">Por tramo</div></div>
       <div class="kpi"><div class="kpi-label">Total a pagar</div><div class="kpi-valor" style="font-size:18px;color:#3B6D11">$${fmt(res.total_a_pagar||0)}</div><div class="kpi-sub ok">Comisión + Bono</div></div>
     `;
