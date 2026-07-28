@@ -1055,6 +1055,8 @@ def get_comisiones():
         pendientes = [r for r in result if r['comision_pagada'] != 'si']
         monto_total = sum(r['monto'] for r in pendientes)
         comision_total = sum(r['comision_ejecutiva'] for r in pendientes)
+        comision_renovaciones = sum(r['comision_ejecutiva'] for r in pendientes if r['tipo']=='renovacion')
+        comision_nuevos = sum(r['comision_ejecutiva'] for r in pendientes if r['tipo']=='nuevo')
         
         # Calcular bono por tramos
         bono = 0
@@ -1074,6 +1076,8 @@ def get_comisiones():
                 'total_pendientes': len(pendientes),
                 'monto_total': monto_total,
                 'comision_total': comision_total,
+                'comision_renovaciones': comision_renovaciones,
+                'comision_nuevos': comision_nuevos,
                 'bono': bono,
                 'total_a_pagar': comision_total + bono,
             },
