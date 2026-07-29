@@ -2570,6 +2570,13 @@ async function cargarConfig(){
     if(data.etapas) cfg.etapas=data.etapas;
     if(data.motivos) cfg.motivos=data.motivos;
     if(data.bancos) cfg.bancos=data.bancos;
+    // Cargar comisiones y bonos
+    ['comision_renovacion','comision_nuevo',
+     'bono_tramo1_min','bono_tramo1_max','bono_tramo1_monto',
+     'bono_tramo2_min','bono_tramo2_max','bono_tramo2_monto',
+     'bono_tramo3_min','bono_tramo3_max','bono_tramo3_monto',
+     'bono_tramo4_min','bono_tramo4_max','bono_tramo4_monto',
+    ].forEach(k=>{ if(data[k]) cfg[k]=data[k]; });
   }catch(e){console.error('Error cargando config:',e);}
   sincSelects();
   cargarClientes();
