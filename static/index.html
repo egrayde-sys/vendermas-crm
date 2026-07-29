@@ -2575,6 +2575,21 @@ async function cargarConfig(){
   cargarClientes();
 }
 
+async function guardarComisionCfg(categoria, valor){
+  if(!valor) return;
+  try{
+    // Borrar valor anterior si existe
+    const valAnterior=cfg[categoria]?.[0];
+    if(valAnterior){
+      await fetch(`${API}/config`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({categoria,valor:valAnterior})});
+    }
+    await fetch(`${API}/config`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({categoria,valor})});
+    if(!cfg[categoria]) cfg[categoria]=[];
+    cfg[categoria]=[valor];
+    toast('Guardado ✓');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
 function renderConfig(){
   const puedeEditar=tienePermiso('todos');
   Object.keys(cfg).forEach(key=>{
@@ -2583,10 +2598,39 @@ function renderConfig(){
   });
   document.querySelectorAll('.cfg-add').forEach(el=>el.style.display=puedeEditar?'flex':'none');
   // Comisiones
+  // Comisiones
   const elCom=document.getElementById('cfg-comisiones');
   if(elCom) elCom.innerHTML=`
-    <div class="det-row"><span class="det-k">% Renovación</span><span class="det-v">${cfg.comision_renovacion?.[0]||'5'}%</span></div>
-    <div class="det-row"><span class="det-k">% Cliente nuevo</span><span class="det-v">${cfg.comision_nuevo?.[0]||'25'}%</span></div>
+    <div class="det-row">
+      <span class="det-k">% Renovación</span>
+      <span class="det-v">
+        ${puedeEditar
+          ? `<input type="number" class="inp" style="width:80px" value="${cfg.comision_renovacion?.[0]||'5'}" onblur="guardarComisionCfg('comision_renovacion',this.value)">%`
+          : `${cfg.comision_renovacion?.[0]||'5'}%`}
+      </span>
+    </div>
+    <div class="det-row">
+      <span class="det-k">% Cliente nuevo</span>
+      <span class="det-v">
+        ${puedeEditar
+          ? `<input type="number" class="inp" style="width:80px" value="${cfg.comision_nuevo?.[0]||'25'}" onblur="guardarComisionCfg('comision_nuevo',this.value)">%`
+          : `${cfg.comision_nuevo?.[0]||'25'}%`}
+      </span>
+    </div>
+    <div style="margin-top:12px;font-weight:600;font-size:12px;color:#555">Bonos por facturación mensual</div>
+    ${['1','2','3','4'].map(n=>`
+    <div class="det-row">
+      <span class="det-k">Tramo ${n} (min)</span>
+      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_min']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_min',this.value)">`:cfg['bono_tramo'+n+'_min']?.[0]||'-'}</span>
+    </div>
+    <div class="det-row">
+      <span class="det-k">Tramo ${n} (max)</span>
+      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_max']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_max',this.value)">`:cfg['bono_tramo'+n+'_max']?.[0]||'-'}</span>
+    </div>
+    <div class="det-row">
+      <span class="det-k">Tramo ${n} (bono $)</span>
+      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_monto']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_monto',this.value)">`:cfg['bono_tramo'+n+'_monto']?.[0]||'-'}</span>
+    </div>`).join('<hr style="margin:4px 0;border:none;border-top:1px solid #f0f0f0">')}
   `;
 }
 
