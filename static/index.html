@@ -2628,15 +2628,15 @@ function renderConfig(){
     ${['1','2','3','4'].map(n=>`
     <div class="det-row">
       <span class="det-k">Tramo ${n} (min)</span>
-      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_min']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_min',this.value)">`:cfg['bono_tramo'+n+'_min']?.[0]||'-'}</span>
+      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_min']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_min',this.value)">`:'$'+fmt(cfg['bono_tramo'+n+'_min']?.[0]||0)}</span>
     </div>
     <div class="det-row">
       <span class="det-k">Tramo ${n} (max)</span>
-      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_max']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_max',this.value)">`:cfg['bono_tramo'+n+'_max']?.[0]||'-'}</span>
+      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_max']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_max',this.value)">`:'$'+fmt(cfg['bono_tramo'+n+'_max']?.[0]||0)}</span>
     </div>
     <div class="det-row">
       <span class="det-k">Tramo ${n} (bono $)</span>
-      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_monto']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_monto',this.value)">`:cfg['bono_tramo'+n+'_monto']?.[0]||'-'}</span>
+      <span class="det-v">${puedeEditar?`<input type="number" class="inp" style="width:120px" value="${cfg['bono_tramo'+n+'_monto']?.[0]||''}" onblur="guardarComisionCfg('bono_tramo${n}_monto',this.value)">`:'$'+fmt(cfg['bono_tramo'+n+'_monto']?.[0]||0)}</span>
     </div>`).join('<hr style="margin:4px 0;border:none;border-top:1px solid #f0f0f0">')}
   `;
 }
