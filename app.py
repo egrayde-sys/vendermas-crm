@@ -11,6 +11,30 @@ from google.ads.googleads.client import GoogleAdsClient
 import yaml
 
 load_dotenv()
+
+# ── CACHÉ ──
+import time as _time
+_cache = {}
+CACHE_TTL = 60  # segundos
+
+def cache_get(key):
+    if key in _cache:
+        data, ts = _cache[key]
+        if _time.time() - ts < CACHE_TTL:
+            return data
+        del _cache[key]
+    return None
+
+def cache_set(key, data):
+    _cache[key] = (data, _time.time())
+
+def cache_clear(*keys):
+    if keys:
+        for k in keys:
+            _cache.pop(k, None)
+    else:
+        _cache.clear()
+
 LOGIN_USER = os.getenv('LOGIN_USER', 'admin')
 LOGIN_PASSWORD = os.getenv('LOGIN_PASSWORD', 'vendermas2026')
 
@@ -151,6 +175,8 @@ def debug():
 @app.route('/api/clientes')
 @login_required
 def get_clientes():
+    cached = cache_get('clientes')
+    if cached is not None: return jsonify(cached)
     try:
         sh = get_sheet()
         rows = sheet_to_dicts(sh.worksheet('Clientes'))
@@ -172,6 +198,7 @@ def get_clientes():
                 'estado':         r.get('Estado','').strip().lower(),
                 'otro_detalle':   r.get('Otro Detalle',''),
             })
+        cache_set('clientes', result)
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -234,6 +261,7 @@ def crear_cliente():
             monto, inv, monto-inv, d.get('fecha_inicio', str(date.today())),
             '', sanitizar(d.get('tipo_pago','factura')), sanitizar(d.get('google_ads_id','')), sanitizar(d.get('estado','activo'))],
             value_input_option='USER_ENTERED')
+        cache_clear('clientes')
         return jsonify({'ok': True, 'id': cid})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -264,6 +292,7 @@ def actualizar_cliente(cid):
                 for campo, header in campo_map.items():
                     if campo in d and header in headers:
                         ws.update_cell(i, headers.index(header)+1, d[campo])
+                cache_clear('clientes')
                 return jsonify({'ok': True})
         return jsonify({'error': 'No encontrado'}), 404
     except Exception as e:
@@ -272,6 +301,8 @@ def actualizar_cliente(cid):
 @app.route('/api/leads')
 @login_required
 def get_leads():
+    cached = cache_get('leads')
+    if cached is not None: return jsonify(cached)
     try:
         sh = get_sheet()
         rows = sheet_to_dicts(sh.worksheet('Leads'))
@@ -344,6 +375,8 @@ def actualizar_lead(lid):
 @app.route('/api/renovaciones')
 @login_required
 def get_renovaciones():
+    cached = cache_get('renovaciones')
+    if cached is not None: return jsonify(cached)
     try:
         sh = get_sheet()
         ren_rows = sheet_to_dicts(sh.worksheet('Renovaciones'))
@@ -383,6 +416,7 @@ def get_renovaciones():
                 'factura_pendiente': r.get('Factura Pendiente',''),
             })
         result.sort(key=lambda x: x['fecha_vencimiento'] or '9999')
+        cache_set('renovaciones', result)
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -404,6 +438,7 @@ def crear_renovacion():
             d.get('frecuencia','mensual'), d.get('fecha_vencimiento',''),
             d.get('fecha_reprogramacion','')
         ], value_input_option='USER_ENTERED')
+        cache_clear('renovaciones')
         return jsonify({'ok':True,'id':rid})
     except Exception as e:
         return jsonify({'error':str(e)}), 500
