@@ -2252,7 +2252,7 @@ async function cargarVentas(){
     const sel=document.getElementById('fil-ventas-mes');
     const keyAct=`${anioCorto}-${mesCorto}`;
     sel.innerHTML='<option value="">Todos los meses</option>'+ventasData.map(m=>`<option value="${m.key}">${m.mes} ${m.anio}</option>`).join('');
-    if([...sel.options].some(o=>o.value===keyAct)) sel.value=keyAct;
+    sel.value='';
     renderVentas();
   }catch(e){console.error('Error ventas:',e);}
 }
