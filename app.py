@@ -1148,6 +1148,24 @@ def pagar_comisiones():
         return jsonify({'ok': True, 'procesados': len(ids)})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+@app.route('/api/renovaciones/<rid>', methods=['DELETE'])
+@login_required
+def eliminar_renovacion(rid):
+    try:
+        sh = get_sheet()
+        ws = sh.worksheet('Renovaciones')
+        rows = ws.get_all_values()
+        for i, row in enumerate(rows[1:], start=2):
+            if row[0] == rid:
+                estado = row[5] if len(row) > 5 else ''
+                if estado == 'renovado':
+                    return jsonify({'error': 'No se puede eliminar una renovación pagada'}), 400
+                ws.delete_rows(i)
+                cache_clear('renovaciones')
+                return jsonify({'ok': True})
+        return jsonify({'error': 'No encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
