@@ -2228,11 +2228,17 @@ async function cargarVentas(){
       porMes[key].items.push({...r,cli});
     });
     ventasData=Object.values(porMes).sort((a,b)=>b.key.localeCompare(a.key));
-    // KPIs totales
-    const totalMonto=ventasData.reduce((s,m)=>s+m.monto,0);
-    const totalCom=ventasData.reduce((s,m)=>s+m.comision,0);
-    const totalAds=ventasData.reduce((s,m)=>s+m.ads,0);
-    const totalCount=ventasData.reduce((s,m)=>s+m.count,0);
+    // Por default mostrar mes actual
+    const mesAct=mesActual();
+    const mesCorto=mesAct.split('-')[0];
+    const anioCorto='20'+mesAct.split('-')[1];
+    const datosMes=ventasData.find(m=>m.mes===mesCorto&&m.anio===anioCorto)||{monto:0,comision:0,ads:0,count:0,factura:0,negro:0};
+    const totalMonto=datosMes.monto;
+    const totalCom=datosMes.comision;
+    const totalAds=datosMes.ads;
+    const totalCount=datosMes.count;
+    const totalFact=datosMes.factura;
+    const totalNegro=datosMes.negro;
 // Por plan
     const porPlan={};
     pagadas.forEach(r=>{
@@ -2248,21 +2254,34 @@ async function cargarVentas(){
       const tp=cli.tipo_pago==='factura'?'factura':'negro';
       porPago[tp].count++;porPago[tp].monto+=r.monto||0;
     });
+    // Por default mostrar mes actual
+    const mesAct=mesActual();
+    const mesCorto=mesAct.split('-')[0];
+    const anioCorto='20'+mesAct.split('-')[1];
+    const datosMes=ventasData.find(m=>m.mes===mesCorto&&m.anio===anioCorto)||{monto:0,comision:0,ads:0,count:0,factura:0,negro:0};
+    // Por plan del mes actual
+    const porPlanMes={};
+    (datosMes.items||[]).forEach(r=>{
+      const cli=cliDict[r.id_cliente]||{};
+      const plan=cli.plan||'Sin plan';
+      if(!porPlanMes[plan])porPlanMes[plan]={count:0,monto:0};
+      porPlanMes[plan].count++;porPlanMes[plan].monto+=r.monto||0;
+    });
     document.getElementById('kpi-ventas').innerHTML=`
-      <div class="kpi"><div class="kpi-label">Total renovaciones</div><div class="kpi-valor">${totalCount}</div><div class="kpi-sub ok">Pagadas</div></div>
-      <div class="kpi"><div class="kpi-label">Monto total</div><div class="kpi-valor" style="font-size:18px">$${fmt(totalMonto)}</div><div class="kpi-sub ok">Todos los meses</div></div>
-      <div class="kpi"><div class="kpi-label">Comisión total</div><div class="kpi-valor" style="font-size:18px">$${fmt(totalCom)}</div><div class="kpi-sub info">Ganancia</div></div>
-      <div class="kpi"><div class="kpi-label">Inversión Ads</div><div class="kpi-valor" style="font-size:18px">$${fmt(totalAds)}</div><div class="kpi-sub warn">Total</div></div>
-      <div class="kpi"><div class="kpi-label">Con factura</div><div class="kpi-valor">${porPago.factura.count}</div><div class="kpi-sub info">$${fmt(porPago.factura.monto)}</div></div>
-      <div class="kpi"><div class="kpi-label">Sin factura</div><div class="kpi-valor">${porPago.negro.count}</div><div class="kpi-sub warn">$${fmt(porPago.negro.monto)}</div></div>
-      ${Object.entries(porPlan).sort((a,b)=>b[1].monto-a[1].monto).map(([plan,v])=>`
+      <div class="kpi"><div class="kpi-label">Renovaciones</div><div class="kpi-valor">${datosMes.count||0}</div><div class="kpi-sub ok">${mesCorto} ${anioCorto}</div></div>
+      <div class="kpi"><div class="kpi-label">Monto total</div><div class="kpi-valor" style="font-size:18px">$${fmt(datosMes.monto||0)}</div><div class="kpi-sub ok">${mesCorto} ${anioCorto}</div></div>
+      <div class="kpi"><div class="kpi-label">Comisión total</div><div class="kpi-valor" style="font-size:18px">$${fmt(datosMes.comision||0)}</div><div class="kpi-sub info">Ganancia</div></div>
+      <div class="kpi"><div class="kpi-label">Inversión Ads</div><div class="kpi-valor" style="font-size:18px">$${fmt(datosMes.ads||0)}</div><div class="kpi-sub warn">Total</div></div>
+      <div class="kpi"><div class="kpi-label">Con factura</div><div class="kpi-valor" style="font-size:18px">$${fmt(datosMes.factura||0)}</div><div class="kpi-sub info">${mesCorto} ${anioCorto}</div></div>
+      <div class="kpi"><div class="kpi-label">Sin factura</div><div class="kpi-valor" style="font-size:18px">$${fmt(datosMes.negro||0)}</div><div class="kpi-sub warn">${mesCorto} ${anioCorto}</div></div>
+      ${Object.entries(porPlanMes).sort((a,b)=>b[1].monto-a[1].monto).map(([plan,v])=>`
       <div class="kpi"><div class="kpi-label">${plan}</div><div class="kpi-valor">${v.count}</div><div class="kpi-sub info">$${fmt(v.monto)}</div></div>`).join('')}
     `;
-    // Filtro meses
+    // Filtro meses - setear mes actual por default
     const sel=document.getElementById('fil-ventas-mes');
-    const cur=sel.value;
+    const keyAct=`${anioCorto}-${mesCorto}`;
     sel.innerHTML='<option value="">Todos los meses</option>'+ventasData.map(m=>`<option value="${m.key}">${m.mes} ${m.anio}</option>`).join('');
-    if(cur) sel.value=cur;
+    if([...sel.options].some(o=>o.value===keyAct)) sel.value=keyAct;
     renderVentas();
   }catch(e){console.error('Error ventas:',e);}
 }
