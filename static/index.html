@@ -1331,6 +1331,15 @@ async function guardarRenovacion(){
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
+async function eliminarRenovacion(rid, cid){
+  if(!confirm('¿Eliminar esta renovación?')) return;
+  try{
+    await fetch(`${API}/renovaciones/${rid}`,{method:'DELETE',headers:{'Content-Type':'application/json'}});
+    toast('Renovación eliminada ✓');
+    await verDetalle(cid);
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
 function abrirReprogramar(rid){
   renReprogramando=rid;
   document.getElementById('fecha-reprogramacion').value='';
