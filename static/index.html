@@ -969,9 +969,9 @@ async function cargarClientes(){
     const perdidos=clis.filter(c=>c.estado==='perdido').length;
     const activosClis=clis.filter(c=>c.estado!=='perdido');
     const rens=window._rensClientes||[];
-    const mesAct=mesActual();
-    const mesCorto=mesAct.split('-')[0];
-    const anioCorto='20'+mesAct.split('-')[1];
+    const mesActV=mesActual();
+    const mesCorto=mesActV.split('-')[0];
+    const anioCorto='20'+mesActV.split('-')[1];
     const cidsRenovados=new Set(rens.filter(r=>r.mes===mesCorto&&r.anio===anioCorto&&r.estado==='renovado').map(r=>r.id_cliente));
     const sinRenovar=clis.filter(c=>c.estado!=='perdido'&&!cidsRenovados.has(c.id)).length;
     const pendientesRenovar=sinRenovar-postergados;
