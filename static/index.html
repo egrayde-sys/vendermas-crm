@@ -1268,13 +1268,12 @@ function abrirEditarRenovacion(rid,cid,mes,anio,estado,fecha,fpago,fvenc,monto,c
   document.getElementById('ren-factura').value=factura||'';
   document.getElementById('ren-banco').value=banco||'';
   document.getElementById('ren-factura-pendiente').checked=factura_pendiente==='si';
-  // Bloquear campos si está pagado
-  const pagado=estado==='renovado';
+  // Desbloquear todos los campos siempre
   ['ren-mes','ren-anio','ren-estado','ren-frecuencia','ren-fvenc','ren-fpago','ren-monto','ren-comision','ren-ads','ren-factura','ren-banco'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.disabled=pagado;
+    if(el) el.disabled=false;
   });
-  document.getElementById('modal-renovacion').querySelector('.btn-primary').style.display=pagado?'none':'';
+  document.getElementById('modal-renovacion').querySelector('.btn-primary').style.display='';
   abrirModal('modal-renovacion');
 }
 
