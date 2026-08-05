@@ -1099,6 +1099,7 @@ async function verDetalle(id){
             <td style="padding:8px;white-space:nowrap">
               <button class="btn btn-outline btn-sm" onclick="abrirEditarRenovacion('${r.id}','${c.id}','${r.mes}','${r.anio||2026}','${r.estado}','${r.fecha||''}','${r.fecha_pago||''}','${r.fecha_vencimiento||''}',${r.monto||0},${r.comision||0},${r.monto_ads||0},'${r.factura||''}','${r.banco||''}','${r.frecuencia||'mensual'}')">✏️</button>
               ${r.estado!=='renovado'?`<button class="btn btn-outline btn-sm" onclick="abrirReprogramar('${r.id}')">📅</button>`:''}
+      ${['pendiente','vencido','reprogramado'].includes(r.estado)?`<button class="btn btn-outline btn-sm" style="color:#A32D2D" onclick="eliminarRenovacion('${r.id}','${c.id}')">🗑</button>`:''}
             </td>
           </tr>`).join('')}
         </tbody>
