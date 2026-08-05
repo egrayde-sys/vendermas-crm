@@ -2209,17 +2209,15 @@ async function cargarVentas(){
     const cli_rows=Array.isArray(clis)&&clis.length?clis:await fetch(`${API}/clientes`).then(r=>r.json());
     const cliDict={};
     (Array.isArray(cli_rows)?cli_rows:[]).forEach(c=>cliDict[c.id]=c);
-    // Solo pagadas
     const pagadas=rens.filter(r=>r.estado==='renovado');
-    // Agrupar por mes-año
     const porMes={};
     pagadas.forEach(r=>{
       const key=`${r.anio||'2026'}-${r.mes}`;
       if(!porMes[key]) porMes[key]={mes:r.mes,anio:r.anio||'2026',key,count:0,monto:0,comision:0,ads:0,factura:0,negro:0,items:[]};
       const cli=cliDict[r.id_cliente]||{};
       if(!porMes[key].clientes) porMes[key].clientes=new Set();
-        porMes[key].clientes.add(r.id_cliente);
-        porMes[key].count=porMes[key].clientes.size;
+      porMes[key].clientes.add(r.id_cliente);
+      porMes[key].count=porMes[key].clientes.size;
       porMes[key].monto+=r.monto||0;
       porMes[key].comision+=r.comision||0;
       porMes[key].ads+=r.monto_ads||0;
@@ -2228,37 +2226,11 @@ async function cargarVentas(){
       porMes[key].items.push({...r,cli});
     });
     ventasData=Object.values(porMes).sort((a,b)=>b.key.localeCompare(a.key));
-    // Por default mostrar mes actual
-    const mesAct=mesActual();
-    const mesCorto=mesAct.split('-')[0];
-    const anioCorto='20'+mesAct.split('-')[1];
-    const datosMes=ventasData.find(m=>m.mes===mesCorto&&m.anio===anioCorto)||{monto:0,comision:0,ads:0,count:0,factura:0,negro:0};
-    const totalMonto=datosMes.monto;
-    const totalCom=datosMes.comision;
-    const totalAds=datosMes.ads;
-    const totalCount=datosMes.count;
-    const totalFact=datosMes.factura;
-    const totalNegro=datosMes.negro;
-// Por plan
-    const porPlan={};
-    pagadas.forEach(r=>{
-      const cli=cliDict[r.id_cliente]||{};
-      const plan=cli.plan||'Sin plan';
-      if(!porPlan[plan])porPlan[plan]={count:0,monto:0};
-      porPlan[plan].count++;porPlan[plan].monto+=r.monto||0;
-    });
-    // Por tipo pago
-    const porPago={factura:{count:0,monto:0},negro:{count:0,monto:0}};
-    pagadas.forEach(r=>{
-      const cli=cliDict[r.id_cliente]||{};
-      const tp=cli.tipo_pago==='factura'?'factura':'negro';
-      porPago[tp].count++;porPago[tp].monto+=r.monto||0;
-    });
-    // Por default mostrar mes actual
-    const mesAct=mesActual();
-    const mesCorto=mesAct.split('-')[0];
-    const anioCorto='20'+mesAct.split('-')[1];
-    const datosMes=ventasData.find(m=>m.mes===mesCorto&&m.anio===anioCorto)||{monto:0,comision:0,ads:0,count:0,factura:0,negro:0};
+    // Mes actual
+    const mesActV=mesActual();
+    const mesCorto=mesActV.split('-')[0];
+    const anioCorto='20'+mesActV.split('-')[1];
+    const datosMes=ventasData.find(m=>m.mes===mesCorto&&m.anio===anioCorto)||{monto:0,comision:0,ads:0,count:0,factura:0,negro:0,items:[]};
     // Por plan del mes actual
     const porPlanMes={};
     (datosMes.items||[]).forEach(r=>{
@@ -2277,7 +2249,6 @@ async function cargarVentas(){
       ${Object.entries(porPlanMes).sort((a,b)=>b[1].monto-a[1].monto).map(([plan,v])=>`
       <div class="kpi"><div class="kpi-label">${plan}</div><div class="kpi-valor">${v.count}</div><div class="kpi-sub info">$${fmt(v.monto)}</div></div>`).join('')}
     `;
-    // Filtro meses - setear mes actual por default
     const sel=document.getElementById('fil-ventas-mes');
     const keyAct=`${anioCorto}-${mesCorto}`;
     sel.innerHTML='<option value="">Todos los meses</option>'+ventasData.map(m=>`<option value="${m.key}">${m.mes} ${m.anio}</option>`).join('');
