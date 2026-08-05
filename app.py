@@ -438,7 +438,7 @@ def crear_renovacion():
             d.get('frecuencia','mensual'), d.get('fecha_vencimiento',''),
             d.get('fecha_reprogramacion','')
         ], value_input_option='USER_ENTERED')
-        cache_clear('renovaciones')
+        cache_clear('renovaciones', 'comisiones')
         return jsonify({'ok':True,'id':rid})
     except Exception as e:
         return jsonify({'error':str(e)}), 500
@@ -529,6 +529,8 @@ def reprogramar_renovacion(rid):
 @app.route('/api/resumen')
 @login_required
 def get_resumen():
+    cached = cache_get('resumen')
+    if cached is not None: return jsonify(cached)
     try:
         sh = get_sheet()
         clientes = sheet_to_dicts(sh.worksheet('Clientes'))
@@ -538,11 +540,13 @@ def get_resumen():
         inversion= sum(parse_int(c.get('Inversión Ads',0)) for c in activos)
         leads_activos  = sum(1 for l in leads if l.get('Etapa') not in ['cerrado','perdido'])
         leads_cerrados = sum(1 for l in leads if l.get('Etapa') == 'cerrado')
-        return jsonify({
+        resultado_res = {
             'clientes_activos': len(activos), 'ingresos_mes': ingresos,
             'margen_mes': ingresos-inversion, 'vencen_semana': 0,
             'leads_activos': leads_activos, 'leads_cerrados': leads_cerrados,
-        })
+        }
+        cache_set('resumen', resultado_res)
+        return jsonify(resultado_res)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -1047,6 +1051,8 @@ def debug_ren():
 @app.route('/api/comisiones')
 @login_required
 def get_comisiones():
+    cached = cache_get('comisiones')
+    if cached is not None: return jsonify(cached)
     try:
         sh = get_sheet()
         ren_rows = sheet_to_dicts(sh.worksheet('Renovaciones'))
@@ -1110,7 +1116,7 @@ def get_comisiones():
                 bono = t_monto
                 break
         
-        return jsonify({
+        resultado_com = {
             'items': result,
             'resumen': {
                 'total_pendientes': len(pendientes),
@@ -1125,7 +1131,9 @@ def get_comisiones():
                 'pct_renovacion': cfg_com.get('comision_renovacion', 5),
                 'pct_nuevo': cfg_com.get('comision_nuevo', 25),
             }
-        })
+        }
+        cache_set('comisiones', resultado_com)
+        return jsonify(resultado_com)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
