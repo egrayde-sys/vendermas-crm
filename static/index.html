@@ -1299,6 +1299,9 @@ async function guardarRenovacion(){
       console.log('renEdit:',renEdit,'estado:',estado,'fpago:',document.getElementById('ren-fpago').value);
       // Si se marca como pagado usar endpoint especial
       if(estado==='renovado'&&document.getElementById('ren-fpago').value){
+        // Primero guardar todos los datos
+        await fetch(`${API}/renovaciones/${renEdit}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        // Luego marcar como pagado y crear siguiente período
         const res=await fetch(`${API}/renovaciones/${renEdit}/pagar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fecha_pago:data.fecha_pago})});
         const result=await res.json();
         toast(`✓ Pagado. Próximo: ${result.siguiente_fecha||''}`);
