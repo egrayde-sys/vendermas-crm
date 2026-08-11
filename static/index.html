@@ -2809,6 +2809,7 @@ async function verificarAuth(){
   try{
     const res=await fetch(`${API}/check_auth`).then(r=>r.json());
     if(res.logged_in){
+      window._permisos = res.permisos || '';
       document.getElementById('login-page').style.display='none';
       cargarConfig();
     }else{
