@@ -155,7 +155,11 @@ def logout():
 
 @app.route('/api/check_auth')
 def check_auth():
-    return jsonify({'logged_in': session.get('logged_in', False)})
+    return jsonify({
+        'logged_in': session.get('logged_in', False),
+        'permisos': session.get('permisos', ''),
+        'usuario': session.get('usuario', '')
+    })
 
 @app.route('/')
 def index():
