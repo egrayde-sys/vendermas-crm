@@ -572,12 +572,12 @@ tr:hover td{background:#fafffe;}
           <option value="pendiente">Pendientes</option>
           <option value="pagado">Pagados</option>
         </select>
-        ${tienePermiso('todos')?'<button class="btn btn-primary" onclick="procesarComisiones()">✓ Procesar seleccionados</button>':''}
+        <span id="btn-procesar-com"></span>
       </div>
     </div>
     <table>
       <thead><tr>
-        <th>${tienePermiso('todos')?'<input type="checkbox" id="chk-all-com" onchange="toggleAllCom(this)">':''}</th>
+        <th><span id="chk-all-com-wrap"></span></th>
         <th>Cliente</th><th>Mes</th><th>Tipo</th><th>Plan</th>
         <th>Monto</th><th>Comisión base</th><th>Comisión ejecutiva</th><th>Estado</th>
       </tr></thead>
@@ -2449,6 +2449,8 @@ async function cargarComisiones(){
     comisionesData=data.items||[];
     const res=data.resumen||{};
     const cfg=data.config||{};
+    document.getElementById('btn-procesar-com').innerHTML=tienePermiso('todos')?'<button class="btn btn-primary" onclick="procesarComisiones()">✓ Procesar seleccionados</button>':'';
+    document.getElementById('chk-all-com-wrap').innerHTML=tienePermiso('todos')?'<input type="checkbox" id="chk-all-com" onchange="toggleAllCom(this)">':'';
     document.getElementById('kpi-comisiones').innerHTML=`
       <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-valor">${res.total_pendientes||0}</div><div class="kpi-sub warn">Sin pagar</div></div>
       <div class="kpi"><div class="kpi-label">Monto total</div><div class="kpi-valor" style="font-size:16px">$${fmt(res.monto_total||0)}</div><div class="kpi-sub info">Base cálculo</div></div>
@@ -2473,7 +2475,7 @@ function renderComisiones(){
   if(filCom.estado==='pagado') data=data.filter(c=>c.comision_pagada==='si');
   actualizarKpiSeleccionados();
   document.getElementById('tbody-comisiones').innerHTML=data.map(c=>`<tr>
-    <td>${tienePermiso('todos')?`<input type="checkbox" class="chk-com" value="${c.id}" ${c.comision_pagada==='si'?'disabled':''} onchange="actualizarKpiSeleccionados()">`:''}</td>
+    <td><input type="checkbox" class="chk-com" value="${c.id}" ${(c.comision_pagada==='si'||!tienePermiso('todos'))?'disabled':''} onchange="actualizarKpiSeleccionados()"></td>
     <td><strong>${c.nombre_cliente}</strong></td>
     <td>${c.mes} ${c.anio}</td>
     <td><span class="tag ${c.tipo==='nuevo'?'tag-verde':'tag-blue'}">${c.tipo==='nuevo'?'Cliente nuevo':'Renovación'}</span></td>
