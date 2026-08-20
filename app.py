@@ -447,7 +447,8 @@ def crear_renovacion():
             d.get('fecha_pago',''), d.get('monto',0), d.get('comision',0),
             d.get('monto_ads',0), d.get('factura',''), d.get('banco',''),
             d.get('frecuencia','mensual'), d.get('fecha_vencimiento',''),
-            d.get('fecha_reprogramacion',''), google_ads_id
+            d.get('fecha_reprogramacion',''), d.get('factura_pendiente',''),
+            d.get('tipo',''), '', google_ads_id
         ], value_input_option='USER_ENTERED')
         cache_clear('renovaciones', 'comisiones')
         return jsonify({'ok':True,'id':rid})
@@ -516,7 +517,7 @@ def pagar_renovacion(rid):
                 except: pass
                 ws.append_row([
                     new_rid, id_cliente, nombre_cliente, sig_mes, sig_anio,
-                    'pendiente', '', '', monto, '', '', '', '', freq, str(sig), '', google_ads_id
+                    'pendiente', '', '', monto, '', '', '', '', freq, str(sig), '', '', '', '', google_ads_id
                 ], value_input_option='USER_ENTERED')
                 return jsonify({'ok':True,'siguiente_fecha':str(sig),'siguiente_mes':f"{sig_mes}-{sig_anio[2:]}"})
         return jsonify({'error':'No encontrado'}), 404
