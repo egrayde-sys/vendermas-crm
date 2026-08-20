@@ -507,9 +507,16 @@ def pagar_renovacion(rid):
                 nombre_cliente = row[headers.index('Nombre Cliente')] if 'Nombre Cliente' in headers else ''
                 monto = row[headers.index('Valor Campaña')] if 'Valor Campaña' in headers else 0
                 new_rid = 'r'+str(uuid.uuid4())[:6]
+                # Obtener google_ads_id del cliente
+                google_ads_id = ''
+                try:
+                    cli_rows = sheet_to_dicts(sh.worksheet('Clientes'))
+                    cli = next((c for c in cli_rows if c.get('ID') == id_cliente), {})
+                    google_ads_id = cli.get('ID Google Ads','')
+                except: pass
                 ws.append_row([
                     new_rid, id_cliente, nombre_cliente, sig_mes, sig_anio,
-                    'pendiente', '', '', monto, '', '', '', '', freq, str(sig), ''
+                    'pendiente', '', '', monto, '', '', '', '', freq, str(sig), '', google_ads_id
                 ], value_input_option='USER_ENTERED')
                 return jsonify({'ok':True,'siguiente_fecha':str(sig),'siguiente_mes':f"{sig_mes}-{sig_anio[2:]}"})
         return jsonify({'error':'No encontrado'}), 404
