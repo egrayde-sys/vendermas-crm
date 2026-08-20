@@ -260,6 +260,7 @@ tr:hover td{background:#fafffe;}
           <th class="sort" onclick="sortCli('fecha_inicio')">Inicio ⇅</th>
           <th>Tipo pago</th>
           <th class="sort" onclick="sortCli('estado')">Estado ⇅</th>
+          <th>Google Ads ID</th>
           <th></th>
         </tr></thead>
         <tbody id="tbody-clientes"></tbody>
@@ -1057,6 +1058,7 @@ function renderClientes(){
       </select>
       ${c.estado==='otro'?`<input class="inp" style="font-size:11px;margin-top:4px;width:100%" placeholder="Especificar..." value="${c.otro_detalle||''}" onblur="guardarOtroDetalle('${c.id}',this.value)">`:''}
     </td>
+    <td style="font-size:11px;color:#888">${c.google_ads_id||'-'}</td>
     <td><button class="btn btn-outline btn-sm" onclick="verDetalle('${c.id}')">Detalle</button></td>
   </tr>`).join('');
 }
