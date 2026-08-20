@@ -433,6 +433,13 @@ def crear_renovacion():
         ws = sh.worksheet('Renovaciones')
         d = request.json
         rid = 'r'+str(uuid.uuid4())[:6]
+        # Obtener google_ads_id del cliente
+        google_ads_id = ''
+        try:
+            cli_rows = sheet_to_dicts(sh.worksheet('Clientes'))
+            cli = next((c for c in cli_rows if c.get('ID') == d.get('id_cliente','')), {})
+            google_ads_id = cli.get('ID Google Ads','')
+        except: pass
         ws.append_row([
             rid, d.get('id_cliente',''), d.get('nombre_cliente',''),
             d.get('mes',''), d.get('anio',''),
@@ -440,7 +447,7 @@ def crear_renovacion():
             d.get('fecha_pago',''), d.get('monto',0), d.get('comision',0),
             d.get('monto_ads',0), d.get('factura',''), d.get('banco',''),
             d.get('frecuencia','mensual'), d.get('fecha_vencimiento',''),
-            d.get('fecha_reprogramacion','')
+            d.get('fecha_reprogramacion',''), google_ads_id
         ], value_input_option='USER_ENTERED')
         cache_clear('renovaciones', 'comisiones')
         return jsonify({'ok':True,'id':rid})
