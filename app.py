@@ -1004,10 +1004,6 @@ def run_scheduler():
     schedule.every().friday.at("08:00").do(resumen_lunes)
     schedule.every().friday.at("08:00").do(metas_lunes)
     schedule.every().friday.at("08:00").do(leads_lunes)
-    schedule.every().day.at("08:00").do(contactos_hoy)
-    schedule.every().day.at("09:00").do(alerta_google_ads)
-    schedule.every().day.at("08:00").do(vencimientos_renovaciones)
-    schedule.every().day.at("09:30").do(alerta_variacion_ads)
     while True:
         schedule.run_pending()
         time.sleep(60)
