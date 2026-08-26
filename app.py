@@ -469,7 +469,8 @@ def actualizar_renovacion(rid):
             'factura':'N° Factura','banco':'Banco','frecuencia':'Frecuencia',
             'anio':'Año','fecha_vencimiento':'Fecha Vencimiento ',
             'fecha_reprogramacion':'Fecha Reprogramación',
-            'factura_pendiente':'Factura Pendiente'
+            'factura_pendiente':'Factura Pendiente',
+            'tipo':'Tipo'
         }
         for i, row in enumerate(rows[1:], start=2):
             if row[0] == rid:
