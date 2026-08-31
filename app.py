@@ -328,7 +328,7 @@ def get_leads():
 @app.route('/api/leads', methods=['POST'])
 @login_required
 def crear_lead():
-    if not tiene_permiso('crear_clientes'):
+    if not tiene_permiso('crear_leads'):
         return jsonify({'error': 'Sin permiso'}), 403
     try:
         sh = get_sheet()
@@ -347,7 +347,7 @@ def crear_lead():
 @app.route('/api/leads/<lid>', methods=['PUT'])
 @login_required
 def actualizar_lead(lid):
-    if not tiene_permiso('crear_clientes'):
+    if not tiene_permiso('editar_leads'):
         return jsonify({'error': 'Sin permiso'}), 403
     try:
         sh = get_sheet()
