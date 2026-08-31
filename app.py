@@ -84,6 +84,12 @@ def sheet_to_dicts(ws):
             result.append(dict(zip(headers, padded)))
     return result
 
+import html
+def sanitizar(v):
+    if isinstance(v, str):
+        return html.escape(v.strip())
+    return v
+
 def parse_int(v):
     try: return int(str(v).replace('.','').replace(',','').replace('$','').strip())
     except: return 0
