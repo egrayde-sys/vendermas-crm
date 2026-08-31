@@ -1571,6 +1571,19 @@ async function cambiarEtapa(id,etapa,selectEl){
 
 async function cambiarEtapaDesde(id,etapa,selectEl){
   if(!etapa)return;
+  if(etapa==='perdido'){
+    leadPerdido=id;leadPerdidoEtapaAnterior=leads.find(l=>l.id===id)?.etapa||'nuevo';
+    poblar('sel-motivo',cfg.motivos);abrirModal('modal-motivo');
+    if(selectEl)selectEl.value=leadPerdidoEtapaAnterior;return;
+  }
+  if(etapa==='cerrado'){
+    leadConv=id;sincSelects();
+    const l=leads.find(x=>x.id===id);
+    if(l&&l.plan_interes)document.getElementById('cv-plan').value=l.plan_interes;
+    if(l&&l.monto_estimado)document.getElementById('cv-monto').value=l.monto_estimado;
+    abrirModal('modal-convertir');
+    if(selectEl)selectEl.value=leadPerdidoEtapaAnterior||'nuevo';return;
+  }
   try{
     await fetch(`${API}/leads/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({etapa})});
     cargarLeads();
