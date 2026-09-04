@@ -2339,7 +2339,12 @@ async function cargarCalRenovaciones(){
     // Clientes sin renovación pendiente
     const clisData=Array.isArray(clis)&&clis.length?clis:await fetch(`${API}/clientes`).then(r=>r.json());
     const activos=clisData.filter(c=>c.estado!=='perdido');
-    const cidsConPendiente=new Set(calRenData.filter(r=>['pendiente','reprogramado'].includes(r.estado)).map(r=>r.id_cliente));
+    const hoy=new Date().toISOString().split('T')[0];
+    const cidsConPendiente=new Set(calRenData.filter(r=>
+      ['pendiente','reprogramado'].includes(r.estado) ||
+      (r.estado==='pendiente'&&r.fecha_vencimiento&&r.fecha_vencimiento<hoy) ||
+      r.estado==='vencido'
+    ).map(r=>r.id_cliente));
     const sinPendiente=activos.filter(c=>!cidsConPendiente.has(c.id));
     document.getElementById('lista-sin-pendiente').innerHTML=sinPendiente.length
       ? sinPendiente.map(c=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span><strong>${c.nombre}</strong></span><span class="tag tag-warn">${c.plan}</span></div>`).join('')
