@@ -2350,7 +2350,6 @@ async function cargarCalRenovaciones(){
       ? sinPendiente.map(c=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span><strong>${c.nombre}</strong></span><span class="tag tag-warn">${c.plan}</span></div>`).join('')
       : '<div style="font-size:12px;color:#aaa">Todos tienen renovación pendiente ✓</div>';
     // Clientes con renovación vencida
-    const hoy=new Date().toISOString().split('T')[0];
     const vencidas=calRenData.filter(r=>r.estado==='vencido'||(r.estado==='pendiente'&&r.fecha_vencimiento&&r.fecha_vencimiento<hoy));
     document.getElementById('lista-vencidas').innerHTML=vencidas.length
       ? vencidas.map(r=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span><strong>${r.nombre_cliente}</strong><span style="color:#888;margin-left:6px">${r.fecha_vencimiento}</span></span><span style="color:#A32D2D;font-weight:600">$${fmt(r.monto)}</span></div>`).join('')
