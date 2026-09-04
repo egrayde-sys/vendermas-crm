@@ -1429,6 +1429,7 @@ async function cargarLeads(){
 
 function renderLeads(){
   let data=[...leads];
+  data=data.filter(l=>!['perdido','no contesta'].includes(l.etapa));
   if(filLeads.fuente)data=data.filter(l=>l.fuente===filLeads.fuente);
   if(filLeads.etapa)data=data.filter(l=>l.etapa===filLeads.etapa);
   if(filLeads.mes)data=data.filter(l=>mesFechaStr(l.fecha)===filLeads.mes);
