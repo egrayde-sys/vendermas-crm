@@ -474,7 +474,7 @@ def actualizar_renovacion(rid):
             'estado':'Estado','fecha':'Fecha Renovación','fecha_pago':'Fecha Pago',
             'monto':'Valor Campaña','comision':'Comisión','monto_ads':'Monto Ads',
             'factura':'N° Factura','banco':'Banco','frecuencia':'Frecuencia',
-            'anio':'Año','fecha_vencimiento':'Fecha Vencimiento ',
+            'mes':'Mes','anio':'Año','fecha_vencimiento':'Fecha Vencimiento ',
             'fecha_reprogramacion':'Fecha Reprogramación',
             'factura_pendiente':'Factura Pendiente',
             'tipo':'Tipo'
