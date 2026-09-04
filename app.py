@@ -509,7 +509,15 @@ def pagar_renovacion(rid):
                 ws.update_cell(i, headers.index('Estado')+1, 'renovado')
                 ws.update_cell(i, headers.index('Fecha Pago')+1, fecha_pago_str)
                 freq = row[headers.index('Frecuencia')] if 'Frecuencia' in headers else 'mensual'
-                sig = sig_fecha_desde_pago(fecha_pago, freq)
+                # Usar fecha_vencimiento de la renovación si existe, sino calcular desde fecha_pago
+                fvenc_row = row[headers.index('Fecha Vencimiento ')] if 'Fecha Vencimiento ' in headers else ''
+                if fvenc_row and fvenc_row.strip():
+                    try:
+                        sig = datetime.strptime(fvenc_row.strip(), '%Y-%m-%d').date()
+                    except:
+                        sig = sig_fecha_desde_pago(fecha_pago, freq)
+                else:
+                    sig = sig_fecha_desde_pago(fecha_pago, freq)
                 sig_mes = mes_label(sig)
                 sig_anio = str(sig.year)
                 id_cliente = row[headers.index('ID Cliente')] if 'ID Cliente' in headers else ''
