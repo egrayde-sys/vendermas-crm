@@ -425,6 +425,7 @@ def get_renovaciones():
                 'telefono': cli.get('Teléfono',''), 'email': cli.get('Email',''),
                 'dias': dias,
                 'factura_pendiente': r.get('Factura Pendiente',''),
+                'tipo': r.get('Tipo',''),
             })
         result.sort(key=lambda x: x['fecha_vencimiento'] or '9999')
         cache_set('renovaciones', result)
