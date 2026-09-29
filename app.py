@@ -1101,8 +1101,9 @@ def get_comisiones():
                 try: cfg_com[cat] = float(val)
                 except: pass
         
-        pct_ren   = cfg_com.get('comision_renovacion', 5) / 100
-        pct_nuevo = cfg_com.get('comision_nuevo', 25) / 100
+        pct_ren          = cfg_com.get('comision_renovacion', 5) / 100
+        pct_nuevo        = cfg_com.get('comision_nuevo', 25) / 100
+        pct_capacitacion = cfg_com.get('comision_capacitacion', 30) / 100
         
         # Solo renovaciones pagadas
         result = []
@@ -1113,7 +1114,9 @@ def get_comisiones():
             tipo = r.get('Tipo','renovacion').strip() or 'renovacion'
             comision_base = parse_int(r.get('Comisión', 0))
             monto = parse_int(r.get('Valor Campaña', 0))
-            pct = pct_nuevo if tipo == 'nuevo' else pct_ren
+            if tipo == 'nuevo': pct = pct_nuevo
+            elif tipo == 'capacitacion': pct = pct_capacitacion
+            else: pct = pct_ren
             comision_ejecutiva = round(comision_base * pct)
             result.append({
                 'id': r.get('ID',''),
