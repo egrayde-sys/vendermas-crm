@@ -1210,6 +1210,71 @@ def eliminar_renovacion(rid):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/rentabilidad')
+@login_required
+def get_rentabilidad():
+    try:
+        sh = get_sheet()
+        rows = sheet_to_dicts(sh.worksheet('Rentabilidad'))
+        result = []
+        for r in rows:
+            if r.get('Mes','').strip():
+                result.append({
+                    'mes': r.get('Mes',''),
+                    'anio': r.get('Año',''),
+                    'total_leads': parse_int(r.get('Total Leads',0)),
+                    'leads_mail': parse_int(r.get('Leads Mail',0)),
+                    'leads_chat': parse_int(r.get('Leads Chat',0)),
+                    'leads_telefono': parse_int(r.get('Leads Telefono',0)),
+                    'leads_whatsapp': parse_int(r.get('Leads Whatsapp',0)),
+                    'leads_referidos': parse_int(r.get('Leads Referidos',0)),
+                    'clientes_nuevos': parse_int(r.get('Clientes Nuevos',0)),
+                    'ingresos_nuevas': parse_int(r.get('Ingresos Nuevas',0)),
+                    'costo_campana': parse_int(r.get('Costo Campaña',0)),
+                    'costo_cliente': parse_int(r.get('Costo Cliente',0)),
+                    'clientes_renovados': parse_int(r.get('Clientes Renovados',0)),
+                    'ingresos_renovadas': parse_int(r.get('Ingresos Renovadas',0)),
+                })
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/rentabilidad', methods=['POST'])
+@login_required
+def guardar_rentabilidad():
+    try:
+        sh = get_sheet()
+        ws = sh.worksheet('Rentabilidad')
+        rows = ws.get_all_values()
+        headers = rows[0]
+        d = request.json
+        mes = d.get('mes','')
+        anio = d.get('anio','')
+        campo_map = {
+            'total_leads':'Total Leads','leads_mail':'Leads Mail',
+            'leads_chat':'Leads Chat','leads_telefono':'Leads Telefono',
+            'leads_whatsapp':'Leads Whatsapp','leads_referidos':'Leads Referidos',
+            'clientes_nuevos':'Clientes Nuevos','ingresos_nuevas':'Ingresos Nuevas',
+            'costo_campana':'Costo Campaña','costo_cliente':'Costo Cliente',
+            'clientes_renovados':'Clientes Renovados','ingresos_renovadas':'Ingresos Renovadas',
+        }
+        # Buscar si ya existe el mes
+        for i, row in enumerate(rows[1:], start=2):
+            if row[0].strip()==mes and (len(row)<2 or row[1].strip()==anio):
+                for campo, header in campo_map.items():
+                    if campo in d and header in headers:
+                        ws.update_cell(i, headers.index(header)+1, d[campo])
+                return jsonify({'ok':True,'action':'updated'})
+        # Crear nueva fila
+        new_row = [mes, anio]
+        for header in headers[2:]:
+            campo = next((k for k,v in campo_map.items() if v==header), None)
+            new_row.append(d.get(campo,0) if campo else '')
+        ws.append_row(new_row, value_input_option='USER_ENTERED')
+        return jsonify({'ok':True,'action':'created'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     print('\n🚀 Vendermas General corriendo en http://localhost:5001\n')
     app.run(debug=True, port=5001)
