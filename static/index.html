@@ -2635,7 +2635,7 @@ async function cargarConfig(){
     if(data.motivos) cfg.motivos=data.motivos;
     if(data.bancos) cfg.bancos=data.bancos;
     // Cargar comisiones y bonos
-    ['comision_renovacion','comision_nuevo',
+    ['comision_renovacion','comision_nuevo','comision_capacitacion',
      'bono_tramo1_min','bono_tramo1_max','bono_tramo1_monto',
      'bono_tramo2_min','bono_tramo2_max','bono_tramo2_monto',
      'bono_tramo3_min','bono_tramo3_max','bono_tramo3_monto',
@@ -2688,7 +2688,15 @@ function renderConfig(){
           : `${cfg.comision_nuevo?.[0]||'25'}%`}
       </span>
     </div>
-    <div style="margin-top:12px;font-weight:600;font-size:12px;color:#555">Bonos por facturación mensual</div>
+    <div class="det-row">
+      <span class="det-k">% Capacitación</span>
+      <span class="det-v">
+        ${puedeEditar
+          ? `<input type="number" class="inp" style="width:80px" value="${cfg.comision_capacitacion?.[0]||'30'}" onblur="guardarComisionCfg('comision_capacitacion',this.value)">%`
+          : `${cfg.comision_capacitacion?.[0]||'30'}%`}
+      </span>
+    </div>
+    <div style="margin-top:12px;;font-weight:600;font-size:12px;color:#555">Bonos por facturación mensual</div>
     ${['1','2','3','4'].map(n=>`
     <div class="det-row">
       <span class="det-k">Tramo ${n} (min)</span>
