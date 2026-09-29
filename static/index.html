@@ -164,6 +164,7 @@ tr:hover td{background:#fafffe;}
     <div class="nav-label">Dashboard</div>
     <div class="nav-item" onclick="nav('indicadores',this)">📊 Indicadores</div>
     <div class="nav-item" onclick="nav('ventas',this)">💰 Ventas</div>
+    <div class="nav-item" onclick="nav('rentabilidad',this)">📊 Rentabilidad</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Metas</div>
@@ -499,6 +500,67 @@ tr:hover td{background:#fafffe;}
     </div>
   </div>
 <div id="cal-ren-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+</div>
+
+<!-- RENTABILIDAD -->
+<div class="page" id="page-rentabilidad">
+  <div class="page-titulo">Rentabilidad</div>
+  <div class="page-sub">Análisis mensual de ingresos, costos y rentabilidad</div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+    <select class="sel" id="sel-rent-mes" onchange="cargarMesRentabilidad()">
+      <option value="">Selecciona un mes...</option>
+    </select>
+    <button class="btn btn-primary" onclick="guardarRentabilidad()">💾 Guardar mes</button>
+    <button class="btn btn-outline" onclick="precargarDesistema()">🔄 Precargar desde sistema</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <!-- Leads por canal -->
+    <div class="card">
+      <div class="card-titulo" style="padding:16px 16px 8px">Leads por canal</div>
+      <div style="padding:0 16px 16px">
+        <div class="det-row"><span class="det-k">Total leads</span><span class="det-v"><input type="number" class="inp" id="rent-total-leads" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Mail</span><span class="det-v"><input type="number" class="inp" id="rent-leads-mail" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Chat</span><span class="det-v"><input type="number" class="inp" id="rent-leads-chat" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Teléfono</span><span class="det-v"><input type="number" class="inp" id="rent-leads-telefono" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Whatsapp</span><span class="det-v"><input type="number" class="inp" id="rent-leads-whatsapp" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Referidos</span><span class="det-v"><input type="number" class="inp" id="rent-leads-referidos" style="width:100px"></span></div>
+      </div>
+    </div>
+    <!-- Nuevas cuentas -->
+    <div class="card">
+      <div class="card-titulo" style="padding:16px 16px 8px">Nuevas cuentas</div>
+      <div style="padding:0 16px 16px">
+        <div class="det-row"><span class="det-k">Clientes nuevos</span><span class="det-v"><input type="number" class="inp" id="rent-clientes-nuevos" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Ingresos nuevas cuentas</span><span class="det-v"><input type="number" class="inp" id="rent-ingresos-nuevas" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Costo campaña</span><span class="det-v"><input type="number" class="inp" id="rent-costo-campana" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Costo cliente</span><span class="det-v"><input type="number" class="inp" id="rent-costo-cliente" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k" style="color:#888">Ingreso promedio</span><span class="det-v" id="rent-ing-prom-nuevo" style="color:#185FA5;font-weight:600">-</span></div>
+        <div class="det-row"><span class="det-k" style="color:#888">Costo por contacto</span><span class="det-v" id="rent-costo-contacto" style="color:#888">-</span></div>
+        <div class="det-row"><span class="det-k" style="color:#888">Costo por cierre</span><span class="det-v" id="rent-costo-cierre" style="color:#888">-</span></div>
+      </div>
+    </div>
+    <!-- Renovaciones -->
+    <div class="card">
+      <div class="card-titulo" style="padding:16px 16px 8px">Cuentas renovadas</div>
+      <div style="padding:0 16px 16px">
+        <div class="det-row"><span class="det-k">Clientes renovados</span><span class="det-v"><input type="number" class="inp" id="rent-clientes-renovados" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k">Ingresos renovadas</span><span class="det-v"><input type="number" class="inp" id="rent-ingresos-renovadas" style="width:100px"></span></div>
+        <div class="det-row"><span class="det-k" style="color:#888">Ingreso promedio</span><span class="det-v" id="rent-ing-prom-ren" style="color:#185FA5;font-weight:600">-</span></div>
+      </div>
+    </div>
+    <!-- Resumen -->
+    <div class="card">
+      <div class="card-titulo" style="padding:16px 16px 8px">Resumen</div>
+      <div style="padding:0 16px 16px">
+        <div class="det-row"><span class="det-k">Ingresos totales</span><span class="det-v" id="rent-ing-total" style="font-weight:700;color:#185FA5">-</span></div>
+        <div class="det-row"><span class="det-k">Ingresos nuevas cuentas</span><span class="det-v" id="rent-res-nuevas">-</span></div>
+        <div class="det-row"><span class="det-k">Ingresos renovadas</span><span class="det-v" id="rent-res-renovadas">-</span></div>
+        <div class="det-row"><span class="det-k">Costo campaña</span><span class="det-v" id="rent-res-costo">-</span></div>
+        <div class="det-row"><span class="det-k">Utilidad</span><span class="det-v" id="rent-res-utilidad" style="color:#3B6D11;font-weight:600">-</span></div>
+        <div class="det-row"><span class="det-k">Rentabilidad</span><span class="det-v" id="rent-res-pct" style="font-size:18px;font-weight:700;color:#185FA5">-</span></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- GOOGLE ADS -->
@@ -911,7 +973,7 @@ function sincSelects(){
   poblar('cv-plan',cfg.planes);poblar('cv-pago',cfg.pagos);
   poblar('sel-motivo',cfg.motivos);
 }
-const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),'variacion-ads':()=>cargarVariacionAds(),'historial-com':()=>cargarHistorialCom(),comisiones:()=>cargarComisiones(),config:()=>renderConfig()};
+const pageMap={resumen:cargarResumen,clientes:cargarClientes,leads:cargarLeads,indicadores:()=>cargarIndicadores(),rentabilidad:()=>cargarRentabilidad(),renovaciones:()=>cargarRenovaciones(),ventas:()=>cargarVentas(),metas:()=>cargarMetas(),googleads:()=>cargarGoogleAds(),calendario:()=>cargarCalendario(),'cal-renovaciones':()=>cargarCalRenovaciones(),'variacion-ads':()=>cargarVariacionAds(),'historial-com':()=>cargarHistorialCom(),comisiones:()=>cargarComisiones(),config:()=>renderConfig()};
 function nav(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -2623,6 +2685,144 @@ function renderHistorialCom(){
   </tr>`).join('');
 }
 
+// ── RENTABILIDAD ──
+let rentData=[];
+
+async function cargarRentabilidad(){
+  try{
+    const data=await fetch(`${API}/rentabilidad`).then(r=>r.json());
+    rentData=Array.isArray(data)?data:[];
+    // Poblar selector de meses
+    const sel=document.getElementById('sel-rent-mes');
+    const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const anioAct=new Date().getFullYear();
+    const opciones=[];
+    for(let a=anioAct;a>=anioAct-1;a--){
+      for(let m=11;m>=0;m--){
+        opciones.push({mes:meses[m],anio:String(a),key:`${meses[m]}-${a}`});
+      }
+    }
+    sel.innerHTML='<option value="">Selecciona un mes...</option>'+opciones.map(o=>`<option value="${o.key}">${o.mes} ${o.anio}</option>`).join('');
+    // Seleccionar mes actual
+    const mesAct=mesActual();
+    const mesCorto=mesAct.split('-')[0];
+    const anioCorto='20'+mesAct.split('-')[1];
+    sel.value=`${mesCorto}-${anioCorto}`;
+    cargarMesRentabilidad();
+  }catch(e){console.error('Error rentabilidad:',e);}
+}
+
+function cargarMesRentabilidad(){
+  const val=document.getElementById('sel-rent-mes').value;
+  if(!val) return;
+  const [mes,anio]=val.split('-');
+  const d=rentData.find(r=>r.mes===mes&&r.anio===anio)||{};
+  document.getElementById('rent-total-leads').value=d.total_leads||'';
+  document.getElementById('rent-leads-mail').value=d.leads_mail||'';
+  document.getElementById('rent-leads-chat').value=d.leads_chat||'';
+  document.getElementById('rent-leads-telefono').value=d.leads_telefono||'';
+  document.getElementById('rent-leads-whatsapp').value=d.leads_whatsapp||'';
+  document.getElementById('rent-leads-referidos').value=d.leads_referidos||'';
+  document.getElementById('rent-clientes-nuevos').value=d.clientes_nuevos||'';
+  document.getElementById('rent-ingresos-nuevas').value=d.ingresos_nuevas||'';
+  document.getElementById('rent-costo-campana').value=d.costo_campana||'';
+  document.getElementById('rent-costo-cliente').value=d.costo_cliente||'';
+  document.getElementById('rent-clientes-renovados').value=d.clientes_renovados||'';
+  document.getElementById('rent-ingresos-renovadas').value=d.ingresos_renovadas||'';
+  calcularRentabilidad();
+}
+
+function calcularRentabilidad(){
+  const totalLeads=parseInt(document.getElementById('rent-total-leads').value)||0;
+  const cliNuevos=parseInt(document.getElementById('rent-clientes-nuevos').value)||0;
+  const ingNuevas=parseInt(document.getElementById('rent-ingresos-nuevas').value)||0;
+  const costoCamp=parseInt(document.getElementById('rent-costo-campana').value)||0;
+  const cliRen=parseInt(document.getElementById('rent-clientes-renovados').value)||0;
+  const ingRen=parseInt(document.getElementById('rent-ingresos-renovadas').value)||0;
+  const ingTotal=ingNuevas+ingRen;
+  const utilidad=ingTotal-costoCamp;
+  const rentPct=ingTotal>0?Math.round(utilidad/ingTotal*1000)/10:0;
+  const ingPromNuevo=cliNuevos>0?Math.round(ingNuevas/cliNuevos):0;
+  const ingPromRen=cliRen>0?Math.round(ingRen/cliRen):0;
+  const costoContacto=totalLeads>0?Math.round(costoCamp/totalLeads):0;
+  const costoCierre=cliNuevos>0?Math.round(costoCamp/cliNuevos):0;
+  document.getElementById('rent-ing-prom-nuevo').textContent=ingPromNuevo?'$'+fmt(ingPromNuevo):'-';
+  document.getElementById('rent-costo-contacto').textContent=costoContacto?'$'+fmt(costoContacto):'-';
+  document.getElementById('rent-costo-cierre').textContent=costoCierre?'$'+fmt(costoCierre):'-';
+  document.getElementById('rent-ing-prom-ren').textContent=ingPromRen?'$'+fmt(ingPromRen):'-';
+  document.getElementById('rent-ing-total').textContent='$'+fmt(ingTotal);
+  document.getElementById('rent-res-nuevas').textContent='$'+fmt(ingNuevas);
+  document.getElementById('rent-res-renovadas').textContent='$'+fmt(ingRen);
+  document.getElementById('rent-res-costo').textContent='$'+fmt(costoCamp);
+  document.getElementById('rent-res-utilidad').textContent='$'+fmt(utilidad);
+  document.getElementById('rent-res-pct').textContent=rentPct+'%';
+}
+
+async function precargarDesistema(){
+  const val=document.getElementById('sel-rent-mes').value;
+  if(!val){toast('Selecciona un mes primero','error');return;}
+  const [mes,anio]=val.split('-');
+  try{
+    const [rens,leadsData]=await Promise.all([
+      fetch(`${API}/renovaciones`).then(r=>r.json()),
+      fetch(`${API}/leads`).then(r=>r.json())
+    ]);
+    // Leads del mes por fuente
+    const leadsDelMes=leadsData.filter(l=>{
+      const f=l.fecha_contacto||l.fecha||'';
+      const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      const d=new Date(f);
+      return !isNaN(d)&&meses[d.getMonth()]===mes&&String(d.getFullYear())===anio;
+    });
+    const contFuente=(fuente)=>leadsDelMes.filter(l=>l.fuente?.toLowerCase().includes(fuente)).length;
+    document.getElementById('rent-total-leads').value=leadsDelMes.length;
+    document.getElementById('rent-leads-mail').value=contFuente('mail');
+    document.getElementById('rent-leads-chat').value=contFuente('chat');
+    document.getElementById('rent-leads-telefono').value=contFuente('tel');
+    document.getElementById('rent-leads-whatsapp').value=contFuente('whatsapp');
+    document.getElementById('rent-leads-referidos').value=contFuente('referid');
+    // Renovaciones del mes
+    const renDelMes=rens.filter(r=>r.mes===mes&&r.anio===anio&&r.estado==='renovado');
+    const nuevos=renDelMes.filter(r=>r.tipo==='nuevo');
+    const renovados=renDelMes.filter(r=>r.tipo!=='nuevo');
+    document.getElementById('rent-clientes-nuevos').value=nuevos.length;
+    document.getElementById('rent-ingresos-nuevas').value=nuevos.reduce((s,r)=>s+(r.monto||0),0);
+    document.getElementById('rent-clientes-renovados').value=renovados.length;
+    document.getElementById('rent-ingresos-renovadas').value=renovados.reduce((s,r)=>s+(r.monto||0),0);
+    calcularRentabilidad();
+    toast('Datos precargados desde el sistema ✓');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function guardarRentabilidad(){
+  const val=document.getElementById('sel-rent-mes').value;
+  if(!val){toast('Selecciona un mes primero','error');return;}
+  const [mes,anio]=val.split('-');
+  const data={
+    mes,anio,
+    total_leads:parseInt(document.getElementById('rent-total-leads').value)||0,
+    leads_mail:parseInt(document.getElementById('rent-leads-mail').value)||0,
+    leads_chat:parseInt(document.getElementById('rent-leads-chat').value)||0,
+    leads_telefono:parseInt(document.getElementById('rent-leads-telefono').value)||0,
+    leads_whatsapp:parseInt(document.getElementById('rent-leads-whatsapp').value)||0,
+    leads_referidos:parseInt(document.getElementById('rent-leads-referidos').value)||0,
+    clientes_nuevos:parseInt(document.getElementById('rent-clientes-nuevos').value)||0,
+    ingresos_nuevas:parseInt(document.getElementById('rent-ingresos-nuevas').value)||0,
+    costo_campana:parseInt(document.getElementById('rent-costo-campana').value)||0,
+    costo_cliente:parseInt(document.getElementById('rent-costo-cliente').value)||0,
+    clientes_renovados:parseInt(document.getElementById('rent-clientes-renovados').value)||0,
+    ingresos_renovadas:parseInt(document.getElementById('rent-ingresos-renovadas').value)||0,
+  };
+  try{
+    await fetch(`${API}/rentabilidad`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    // Actualizar rentData local
+    const idx=rentData.findIndex(r=>r.mes===mes&&r.anio===anio);
+    if(idx!==-1)rentData[idx]={...rentData[idx],...data};
+    else rentData.push(data);
+    toast('Guardado ✓');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
 // ── CONFIG ──
 async function cargarConfig(){
   try{
@@ -2925,11 +3125,19 @@ function tienePermiso(p){
   return window._permisos.split(',').includes(p);
 }
 
+function initRentListeners(){
+  ['rent-total-leads','rent-leads-mail','rent-leads-chat','rent-leads-telefono','rent-leads-whatsapp','rent-leads-referidos','rent-clientes-nuevos','rent-ingresos-nuevas','rent-costo-campana','rent-costo-cliente','rent-clientes-renovados','rent-ingresos-renovadas'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener('input',calcularRentabilidad);
+  });
+}
+
 // Init
 async function init(){
   await verificarAuth();
 }
 init();
+initRentListeners();
 </script>
 </body>
 </html>
