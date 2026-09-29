@@ -729,6 +729,10 @@ tr:hover td{background:#fafffe;}
         <input type="checkbox" id="ren-es-captacion" style="width:16px;height:16px">
         <label style="font-size:12px;font-weight:500;color:#555">Es captación (cliente nuevo)</label>
       </div>
+      <div class="fg full" style="flex-direction:row;align-items:center;gap:8px">
+        <input type="checkbox" id="ren-es-capacitacion" style="width:16px;height:16px">
+        <label style="font-size:12px;font-weight:500;color:#555">Es capacitación (one shoot)</label>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="cerrarModal('modal-renovacion')">Cancelar</button>
@@ -1268,6 +1272,7 @@ function abrirNuevaRenovacion(cid,nombre,monto){
   document.getElementById('ren-banco').value='';
   document.getElementById('ren-factura-pendiente').checked=false;
   document.getElementById('ren-es-captacion').checked=false;
+  document.getElementById('ren-es-capacitacion').checked=false;
   abrirModal('modal-renovacion');
 }
 
@@ -1287,6 +1292,7 @@ function abrirEditarRenovacion(rid,cid,mes,anio,estado,fecha,fpago,fvenc,monto,c
   document.getElementById('ren-banco').value=banco||'';
   document.getElementById('ren-factura-pendiente').checked=factura_pendiente==='si';
   document.getElementById('ren-es-captacion').checked=tipo==='nuevo';
+  document.getElementById('ren-es-capacitacion').checked=tipo==='capacitacion';
   // Desbloquear todos los campos siempre
   ['ren-mes','ren-anio','ren-estado','ren-frecuencia','ren-fvenc','ren-fpago','ren-monto','ren-comision','ren-ads','ren-factura','ren-banco'].forEach(id=>{
     const el=document.getElementById(id);
@@ -1312,7 +1318,7 @@ async function guardarRenovacion(){
     factura:document.getElementById('ren-factura').value,
     banco:document.getElementById('ren-banco').value,
     factura_pendiente:document.getElementById('ren-factura-pendiente').checked?'si':'',
-    tipo:document.getElementById('ren-es-captacion').checked?'nuevo':'renovacion',
+    tipo:document.getElementById('ren-es-capacitacion').checked?'capacitacion':document.getElementById('ren-es-captacion').checked?'nuevo':'renovacion',
   };
   try{
     if(renEdit){
