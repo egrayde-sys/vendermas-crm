@@ -507,11 +507,22 @@ tr:hover td{background:#fafffe;}
   <div class="page-titulo">Rentabilidad</div>
   <div class="page-sub">Análisis mensual de ingresos, costos y rentabilidad</div>
   <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+    <select class="sel" id="sel-rent-anio" onchange="cambiarVistaRent()">
+      <option value="2026">2026</option>
+      <option value="2025">2025</option>
+      <option value="2024">2024</option>
+    </select>
+    <button class="btn btn-outline" id="btn-vista-rent" onclick="toggleVistaRent()">📋 Ver tabla anual</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
     <select class="sel" id="sel-rent-mes" onchange="cargarMesRentabilidad()">
       <option value="">Selecciona un mes...</option>
     </select>
     <button class="btn btn-primary" onclick="guardarRentabilidad()">💾 Guardar mes</button>
     <button class="btn btn-outline" onclick="precargarDesistema()">🔄 Precargar desde sistema</button>
+  </div>
+  <div id="tabla-rent-anual" style="display:none;overflow-x:auto;margin-bottom:16px">
+    <table style="width:100%;border-collapse:collapse;font-size:12px" id="tabla-rent"></table>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
     <!-- Leads por canal -->
@@ -2823,6 +2834,60 @@ async function guardarRentabilidad(){
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
+let vistaRentAnual=false;
+
+function toggleVistaRent(){
+  vistaRentAnual=!vistaRentAnual;
+  document.getElementById('tabla-rent-anual').style.display=vistaRentAnual?'block':'none';
+  document.getElementById('btn-vista-rent').textContent=vistaRentAnual?'📝 Vista edición':'📋 Ver tabla anual';
+  if(vistaRentAnual) renderTablaRentAnual();
+}
+
+function cambiarVistaRent(){
+  if(vistaRentAnual) renderTablaRentAnual();
+}
+
+function renderTablaRentAnual(){
+  const anio=document.getElementById('sel-rent-anio').value;
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const datos=meses.map(m=>rentData.find(r=>r.mes===m&&r.anio===anio)||{mes:m,anio});
+  const filas=[
+    {label:'Total leads',key:'total_leads'},
+    {label:'• Mail',key:'leads_mail'},
+    {label:'• Chat',key:'leads_chat'},
+    {label:'• Teléfono',key:'leads_telefono'},
+    {label:'• Whatsapp',key:'leads_whatsapp'},
+    {label:'• Referidos',key:'leads_referidos'},
+    {label:'─',sep:true},
+    {label:'Clientes nuevos',key:'clientes_nuevos'},
+    {label:'Ingresos nuevas cuentas',key:'ingresos_nuevas',fmt:true},
+    {label:'Ingreso promedio nuevo',calc:(d)=>d.clientes_nuevos?Math.round((d.ingresos_nuevas||0)/d.clientes_nuevos):0,fmt:true},
+    {label:'Costo campaña',key:'costo_campana',fmt:true},
+    {label:'Costo por contacto',calc:(d)=>d.total_leads?Math.round((d.costo_campana||0)/d.total_leads):0,fmt:true},
+    {label:'Costo por cierre',calc:(d)=>d.clientes_nuevos?Math.round((d.costo_campana||0)/d.clientes_nuevos):0,fmt:true},
+    {label:'─',sep:true},
+    {label:'Clientes renovados',key:'clientes_renovados'},
+    {label:'Ingresos renovadas',key:'ingresos_renovadas',fmt:true},
+    {label:'Ingreso promedio renovado',calc:(d)=>d.clientes_renovados?Math.round((d.ingresos_renovadas||0)/d.clientes_renovados):0,fmt:true},
+    {label:'─',sep:true},
+    {label:'Ingresos totales',calc:(d)=>(d.ingresos_nuevas||0)+(d.ingresos_renovadas||0),fmt:true,bold:true},
+    {label:'Costo campaña',key:'costo_campana',fmt:true},
+    {label:'Utilidad',calc:(d)=>(d.ingresos_nuevas||0)+(d.ingresos_renovadas||0)-(d.costo_campana||0),fmt:true,bold:true,color:'#3B6D11'},
+    {label:'Rentabilidad',calc:(d)=>{const ing=(d.ingresos_nuevas||0)+(d.ingresos_renovadas||0);const util=ing-(d.costo_campana||0);return ing>0?Math.round(util/ing*1000)/10:0;},pct:true,bold:true,color:'#185FA5'},
+  ];
+  const th=`<tr style="background:#f8f8f8"><th style="text-align:left;padding:8px;border-bottom:2px solid #ececec;min-width:200px">Indicador</th>${meses.map(m=>`<th style="text-align:right;padding:8px;border-bottom:2px solid #ececec;min-width:90px">${m} ${anio.slice(2)}</th>`).join('')}</tr>`;
+  const trs=filas.map(f=>{
+    if(f.sep) return `<tr><td colspan="${meses.length+1}" style="padding:4px;border-bottom:1px solid #f0f0f0"></td></tr>`;
+    const celdas=datos.map(d=>{
+      let val=f.calc?f.calc(d):(d[f.key]||0);
+      let txt=f.pct?val+'%':f.fmt?'$'+fmt(val):val||'-';
+      return `<td style="text-align:right;padding:8px;border-bottom:1px solid #f8f8f8;${f.color?'color:'+f.color+';':''} ${f.bold?'font-weight:600;':''}">${txt}</td>`;
+    }).join('');
+    return `<tr><td style="padding:8px;border-bottom:1px solid #f8f8f8;font-size:11px;color:#555">${f.label}</td>${celdas}</tr>`;
+  }).join('');
+  document.getElementById('tabla-rent').innerHTML=`<thead>${th}</thead><tbody>${trs}</tbody>`;
+}
+  
 // ── CONFIG ──
 async function cargarConfig(){
   try{
