@@ -2751,7 +2751,8 @@ function calcularRentabilidad(){
   const cliRen=parseInt(document.getElementById('rent-clientes-renovados').value)||0;
   const ingRen=parseInt(document.getElementById('rent-ingresos-renovadas').value)||0;
   const ingTotal=ingNuevas+ingRen;
-  const utilidad=ingTotal-costoCamp;
+  const costoCliente=parseInt(document.getElementById('rent-costo-cliente').value)||0;
+  const utilidad=ingTotal-costoCamp-costoCliente;
   const rentPct=ingTotal>0?Math.round(utilidad/ingTotal*1000)/10:0;
   const ingPromNuevo=cliNuevos>0?Math.round(ingNuevas/cliNuevos):0;
   const ingPromRen=cliRen>0?Math.round(ingRen/cliRen):0;
@@ -2872,8 +2873,9 @@ function renderTablaRentAnual(){
     {label:'─',sep:true},
     {label:'Ingresos totales',calc:(d)=>(d.ingresos_nuevas||0)+(d.ingresos_renovadas||0),fmt:true,bold:true},
     {label:'Costo campaña',key:'costo_campana',fmt:true},
-    {label:'Utilidad',calc:(d)=>(d.ingresos_nuevas||0)+(d.ingresos_renovadas||0)-(d.costo_campana||0),fmt:true,bold:true,color:'#3B6D11'},
-    {label:'Rentabilidad',calc:(d)=>{const ing=(d.ingresos_nuevas||0)+(d.ingresos_renovadas||0);const util=ing-(d.costo_campana||0);return ing>0?Math.round(util/ing*1000)/10:0;},pct:true,bold:true,color:'#185FA5'},
+    {label:'Costo cliente',key:'costo_cliente',fmt:true},
+    {label:'Utilidad',calc:(d)=>(d.ingresos_nuevas||0)+(d.ingresos_renovadas||0)-(d.costo_campana||0)-(d.costo_cliente||0),fmt:true,bold:true,color:'#3B6D11'},
+    {label:'Rentabilidad',calc:(d)=>{const ing=(d.ingresos_nuevas||0)+(d.ingresos_renovadas||0);const util=ing-(d.costo_campana||0)-(d.costo_cliente||0);return ing>0?Math.round(util/ing*1000)/10:0;},pct:true,bold:true,color:'#185FA5'},
   ];
   const th=`<tr style="background:#f8f8f8"><th style="text-align:left;padding:8px;border-bottom:2px solid #ececec;min-width:200px">Indicador</th>${meses.map(m=>`<th style="text-align:right;padding:8px;border-bottom:2px solid #ececec;min-width:90px">${m} ${anio.slice(2)}</th>`).join('')}</tr>`;
   const trs=filas.map(f=>{
