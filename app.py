@@ -1234,6 +1234,7 @@ def get_rentabilidad():
                     'costo_cliente': parse_int(r.get('Costo Cliente',0)),
                     'clientes_renovados': parse_int(r.get('Clientes Renovados',0)),
                     'ingresos_renovadas': parse_int(r.get('Ingresos Renovadas',0)),
+                    'sueldo_ejecutiva': parse_int(r.get('Sueldo Ejecutiva',0)),
                 })
         return jsonify(result)
     except Exception as e:
@@ -1257,6 +1258,7 @@ def guardar_rentabilidad():
             'clientes_nuevos':'Clientes Nuevos','ingresos_nuevas':'Ingresos Nuevas',
             'costo_campana':'Costo Campaña','costo_cliente':'Costo Cliente',
             'clientes_renovados':'Clientes Renovados','ingresos_renovadas':'Ingresos Renovadas',
+            'sueldo_ejecutiva':'Sueldo Ejecutiva',
         }
         # Buscar si ya existe el mes
         for i, row in enumerate(rows[1:], start=2):
