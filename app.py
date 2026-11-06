@@ -1214,28 +1214,32 @@ def eliminar_renovacion(rid):
 @login_required
 def get_rentabilidad():
     try:
+        seg = request.args.get('segmento','').strip().upper()
+        if seg == 'TOTAL': seg = ''
         sh = get_sheet()
         rows = sheet_to_dicts(sh.worksheet('Rentabilidad'))
         result = []
         for r in rows:
-            if r.get('Mes','').strip():
-                result.append({
-                    'mes': r.get('Mes',''),
-                    'anio': r.get('Año',''),
-                    'total_leads': parse_int(r.get('Total Leads',0)),
-                    'leads_mail': parse_int(r.get('Leads Mail',0)),
-                    'leads_chat': parse_int(r.get('Leads Chat',0)),
-                    'leads_telefono': parse_int(r.get('Leads Telefono',0)),
-                    'leads_whatsapp': parse_int(r.get('Leads Whatsapp',0)),
-                    'leads_referidos': parse_int(r.get('Leads Referidos',0)),
-                    'clientes_nuevos': parse_int(r.get('Clientes Nuevos',0)),
-                    'ingresos_nuevas': parse_int(r.get('Ingresos Nuevas',0)),
-                    'costo_campana': parse_int(r.get('Costo Campaña',0)),
-                    'costo_cliente': parse_int(r.get('Costo Cliente',0)),
-                    'clientes_renovados': parse_int(r.get('Clientes Renovados',0)),
-                    'ingresos_renovadas': parse_int(r.get('Ingresos Renovadas',0)),
-                    'sueldo_ejecutiva': parse_int(r.get('Sueldo Ejecutiva',0)),
-                })
+            if not r.get('Mes','').strip(): continue
+            if r.get('Segmento','').strip().upper() != seg: continue
+            result.append({
+                'mes': r.get('Mes',''),
+                'anio': r.get('Año',''),
+                'segmento': seg,
+                'total_leads': parse_int(r.get('Total Leads',0)),
+                'leads_mail': parse_int(r.get('Leads Mail',0)),
+                'leads_chat': parse_int(r.get('Leads Chat',0)),
+                'leads_telefono': parse_int(r.get('Leads Telefono',0)),
+                'leads_whatsapp': parse_int(r.get('Leads Whatsapp',0)),
+                'leads_referidos': parse_int(r.get('Leads Referidos',0)),
+                'clientes_nuevos': parse_int(r.get('Clientes Nuevos',0)),
+                'ingresos_nuevas': parse_int(r.get('Ingresos Nuevas',0)),
+                'costo_campana': parse_int(r.get('Costo Campaña',0)),
+                'costo_cliente': parse_int(r.get('Costo Cliente',0)),
+                'clientes_renovados': parse_int(r.get('Clientes Renovados',0)),
+                'ingresos_renovadas': parse_int(r.get('Ingresos Renovadas',0)),
+                'sueldo_ejecutiva': parse_int(r.get('Sueldo Ejecutiva',0)),
+            })
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1251,6 +1255,11 @@ def guardar_rentabilidad():
         d = request.json
         mes = d.get('mes','')
         anio = d.get('anio','')
+        seg = d.get('segmento','').strip().upper()
+        if seg == 'TOTAL': seg = ''
+        seg_idx = headers.index('Segmento') if 'Segmento' in headers else -1
+        if seg and seg_idx == -1:
+            return jsonify({'error': 'Falta la columna Segmento en la pestaña Rentabilidad'}), 400
         campo_map = {
             'total_leads':'Total Leads','leads_mail':'Leads Mail',
             'leads_chat':'Leads Chat','leads_telefono':'Leads Telefono',
@@ -1260,20 +1269,75 @@ def guardar_rentabilidad():
             'clientes_renovados':'Clientes Renovados','ingresos_renovadas':'Ingresos Renovadas',
             'sueldo_ejecutiva':'Sueldo Ejecutiva',
         }
-        # Buscar si ya existe el mes
         for i, row in enumerate(rows[1:], start=2):
-            if row[0].strip()==mes and (len(row)<2 or row[1].strip()==anio):
+            row_seg = row[seg_idx].strip().upper() if seg_idx != -1 and len(row) > seg_idx else ''
+            if row[0].strip()==mes and (len(row)<2 or row[1].strip()==anio) and row_seg==seg:
                 for campo, header in campo_map.items():
                     if campo in d and header in headers:
                         ws.update_cell(i, headers.index(header)+1, d[campo])
                 return jsonify({'ok':True,'action':'updated'})
-        # Crear nueva fila
         new_row = [mes, anio]
         for header in headers[2:]:
+            if header == 'Segmento':
+                new_row.append(seg)
+                continue
             campo = next((k for k,v in campo_map.items() if v==header), None)
             new_row.append(d.get(campo,0) if campo else '')
         ws.append_row(new_row, value_input_option='USER_ENTERED')
         return jsonify({'ok':True,'action':'created'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/rentabilidad/precarga')
+@login_required
+def precarga_rentabilidad():
+    try:
+        mes = request.args.get('mes','').strip()
+        anio = request.args.get('anio','').strip()
+        seg = request.args.get('segmento','').strip().upper()
+        if seg not in ('VM','ADMIN'):
+            return jsonify({'error': 'Segmento debe ser VM o ADMIN'}), 400
+        sh = get_sheet()
+        ren_rows = sheet_to_dicts(sh.worksheet('Renovaciones'))
+        cli_rows = sheet_to_dicts(sh.worksheet('Clientes'))
+        rent_rows = sheet_to_dicts(sh.worksheet('Rentabilidad'))
+        plan_por_cliente = {c.get('ID',''): c.get('Plan','').strip().lower() for c in cli_rows}
+
+        stats = {k: {'nuevos': set(), 'renovados': set(), 'ing_nuevas': 0, 'ing_renov': 0, 'ads': 0} for k in ('VM','ADMIN')}
+        for r in ren_rows:
+            if r.get('Estado','').strip() != 'renovado': continue
+            if r.get('Mes','').strip() != mes or r.get('Año','').strip() != anio: continue
+            cid = r.get('ID Cliente','')
+            s = stats['ADMIN' if plan_por_cliente.get(cid,'') == 'administración' else 'VM']
+            monto = parse_int(r.get('Valor Campaña',0))
+            if r.get('Tipo','').strip() == 'nuevo':
+                s['nuevos'].add(cid); s['ing_nuevas'] += monto
+            else:
+                s['renovados'].add(cid); s['ing_renov'] += monto
+            s['ads'] += parse_int(r.get('Monto Ads',0))
+
+        def n_cli(s): return len(s['nuevos'] | s['renovados'])
+        total_cli = n_cli(stats['VM']) + n_cli(stats['ADMIN'])
+        share = n_cli(stats[seg]) / total_cli if total_cli else 0
+
+        total_row = next((r for r in rent_rows
+                          if r.get('Mes','').strip()==mes and r.get('Año','').strip()==anio
+                          and r.get('Segmento','').strip()==''), {})
+        costo_campana = parse_int(total_row.get('Costo Campaña',0))
+        sueldo = parse_int(total_row.get('Sueldo Ejecutiva',0)) or 1400000
+
+        s = stats[seg]
+        return jsonify({
+            'segmento': seg, 'mes': mes, 'anio': anio,
+            'clientes_nuevos': len(s['nuevos']),
+            'ingresos_nuevas': s['ing_nuevas'],
+            'clientes_renovados': len(s['renovados']),
+            'ingresos_renovadas': s['ing_renov'],
+            'costo_cliente': s['ads'],
+            'costo_campana': round(costo_campana * share),
+            'sueldo_ejecutiva': round(sueldo * share),
+            'participacion': round(share * 100, 1),
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
