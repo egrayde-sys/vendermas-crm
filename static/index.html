@@ -164,7 +164,9 @@ tr:hover td{background:#fafffe;}
     <div class="nav-label">Dashboard</div>
     <div class="nav-item" onclick="nav('indicadores',this)">📊 Indicadores</div>
     <div class="nav-item" onclick="nav('ventas',this)">💰 Ventas</div>
-    <div class="nav-item" onclick="nav('rentabilidad',this)">📊 Rentabilidad</div>
+    <div class="nav-item" onclick="rentSeg='TOTAL';nav('rentabilidad',this)">📊 Rentabilidad total</div>
+    <div class="nav-item" onclick="rentSeg='VM';nav('rentabilidad',this)">📊 Rentabilidad VM</div>
+    <div class="nav-item" onclick="rentSeg='ADMIN';nav('rentabilidad',this)">📊 Rentabilidad ADMIN</div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Metas</div>
@@ -504,7 +506,7 @@ tr:hover td{background:#fafffe;}
 
 <!-- RENTABILIDAD -->
 <div class="page" id="page-rentabilidad">
-  <div class="page-titulo">Rentabilidad</div>
+  <div class="page-titulo" id="rent-titulo">Rentabilidad</div>
   <div class="page-sub">Análisis mensual de ingresos, costos y rentabilidad</div>
   <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
     <select class="sel" id="sel-rent-anio" onchange="cambiarVistaRent()">
@@ -526,7 +528,7 @@ tr:hover td{background:#fafffe;}
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
     <!-- Leads por canal -->
-    <div class="card">
+    <div class="card" id="rent-card-leads">
       <div class="card-titulo" style="padding:16px 16px 8px">Leads por canal</div>
       <div style="padding:0 16px 16px">
         <div class="det-row"><span class="det-k">Total leads</span><span class="det-v"><input type="number" class="inp" id="rent-total-leads" style="width:100px"></span></div>
@@ -2702,11 +2704,18 @@ function renderHistorialCom(){
 
 // ── RENTABILIDAD ──
 let rentData=[];
+let rentSeg='TOTAL';
+const sueldoDef=()=>rentSeg==='TOTAL'?1400000:0;
 
 async function cargarRentabilidad(){
   try{
-    const data=await fetch(`${API}/rentabilidad`).then(r=>r.json());
+    const segQ=rentSeg==='TOTAL'?'':`?segmento=${rentSeg}`;
+    const data=await fetch(`${API}/rentabilidad${segQ}`).then(r=>r.json());
     rentData=Array.isArray(data)?data:[];
+    const esTotal=rentSeg==='TOTAL';
+    document.getElementById('rent-titulo').textContent=esTotal?'Rentabilidad':'Rentabilidad '+rentSeg;
+    document.getElementById('rent-card-leads').style.display=esTotal?'':'none';
+    document.getElementById('rent-costo-contacto').parentElement.style.display=esTotal?'':'none';
     // Poblar selector de meses
     const sel=document.getElementById('sel-rent-mes');
     const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -2785,6 +2794,22 @@ async function precargarDesistema(){
   const val=document.getElementById('sel-rent-mes').value;
   if(!val){toast('Selecciona un mes primero','error');return;}
   const [mes,anio]=val.split('-');
+  if(rentSeg!=='TOTAL'){
+    try{
+      const p=await fetch(`${API}/rentabilidad/precarga?mes=${mes}&anio=${anio}&segmento=${rentSeg}`).then(r=>r.json());
+      if(p.error) throw new Error(p.error);
+      document.getElementById('rent-clientes-nuevos').value=p.clientes_nuevos;
+      document.getElementById('rent-ingresos-nuevas').value=p.ingresos_nuevas;
+      document.getElementById('rent-clientes-renovados').value=p.clientes_renovados;
+      document.getElementById('rent-ingresos-renovadas').value=p.ingresos_renovadas;
+      document.getElementById('rent-costo-cliente').value=p.costo_cliente;
+      document.getElementById('rent-costo-campana').value=p.costo_campana;
+      document.getElementById('rent-sueldo-ejecutiva').value=p.sueldo_ejecutiva;
+      calcularRentabilidad();
+      toast(`Precargado ${rentSeg}: ${p.participacion}% de los clientes del mes ✓`);
+    }catch(e){toast('Error: '+e.message,'error');}
+    return;
+  }
   try{
     const [rens,leadsData]=await Promise.all([
       fetch(`${API}/renovaciones`).then(r=>r.json()),
@@ -2808,9 +2833,9 @@ async function precargarDesistema(){
     const renDelMes=rens.filter(r=>r.mes===mes&&r.anio===anio&&r.estado==='renovado');
     const nuevos=renDelMes.filter(r=>r.tipo==='nuevo');
     const renovados=renDelMes.filter(r=>r.tipo!=='nuevo');
-    document.getElementById('rent-clientes-nuevos').value=nuevos.length;
+    document.getElementById('rent-clientes-nuevos').value=new Set(nuevos.map(r=>r.id_cliente)).size;
     document.getElementById('rent-ingresos-nuevas').value=nuevos.reduce((s,r)=>s+(r.monto||0),0);
-    document.getElementById('rent-clientes-renovados').value=renovados.length;
+    document.getElementById('rent-clientes-renovados').value=new Set(renovados.map(r=>r.id_cliente)).size;
     document.getElementById('rent-ingresos-renovadas').value=renovados.reduce((s,r)=>s+(r.monto||0),0);
     calcularRentabilidad();
     toast('Datos precargados desde el sistema ✓');
@@ -2823,6 +2848,7 @@ async function guardarRentabilidad(){
   const [mes,anio]=val.split('-');
   const data={
     mes,anio,
+    segmento:rentSeg==='TOTAL'?'':rentSeg,
     total_leads:parseInt(document.getElementById('rent-total-leads').value)||0,
     leads_mail:parseInt(document.getElementById('rent-leads-mail').value)||0,
     leads_chat:parseInt(document.getElementById('rent-leads-chat').value)||0,
