@@ -1333,7 +1333,7 @@ def precarga_rentabilidad():
             'ingresos_nuevas': s['ing_nuevas'],
             'clientes_renovados': len(s['renovados']),
             'ingresos_renovadas': s['ing_renov'],
-            'costo_cliente': s['ads'],
+            'costo_cliente': 0 if seg == 'ADMIN' else s['ads'],
             'costo_campana': round(costo_campana * share),
             'sueldo_ejecutiva': round(sueldo * share),
             'participacion': round(share * 100, 1),
